@@ -14,6 +14,7 @@ class ProjectionsController:
         for r in self.readers:
             print(r)
             res = r.get_players(*players)
+            print(f"({len(res)} players)")
             print(res.to_string(index=False))
 
 

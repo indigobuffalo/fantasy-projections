@@ -6,7 +6,7 @@ from reader.base import FantasyBaseReader
 class DomReader(FantasyBaseReader):
 
     def __init__(self, adp_file: str):
-        super().__init__("DOM", adp_file, players_col="NAME", sheet_name="The List")
+        super().__init__("DOM", adp_file, players_col="NAME", rank_col='RK', sheet_name="The List")
         self.players_col = 'NAME'
 
     def get_player(self, name: str):
