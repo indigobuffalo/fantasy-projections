@@ -5,8 +5,8 @@ from reader.base import FantasyBaseReader
 
 class DomReader(FantasyBaseReader):
 
-    def __init__(self, adp_file: str):
-        super().__init__("DOM", adp_file, players_col="NAME", rank_col='RK', sheet_name="The List")
+    def __init__(self, adp_file: str, rank_col='RK', ascending=True):
+        super().__init__(f"DOM {rank_col}", adp_file, players_col="NAME", rank_col=rank_col, ascending=ascending, sheet_name="The List")
         self.players_col = 'NAME'
 
     def get_player(self, name: str):
@@ -14,11 +14,11 @@ class DomReader(FantasyBaseReader):
             'NAME',
             'POS',
             'RK',
-            'AGE',
-            'SALARY',
             'FP',
             '/GP',
             'VORP',
+            'AGE',
+            'SALARY',
             'GP',
             'TOI',
             'G',

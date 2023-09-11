@@ -5,8 +5,8 @@ from reader.base import FantasyBaseReader
 
 class KKUPFLScoringReader(FantasyBaseReader):
 
-    def __init__(self, adp_file: str, sheet_name: str):
-        super().__init__(f"KKUPFL Scoring {sheet_name}", adp_file, players_col="NAME", rank_col='Total Rank', sheet_name=sheet_name)
+    def __init__(self, adp_file: str, sheet_name: str, ascending=False):
+        super().__init__(f"KKUPFL Scoring {sheet_name}", adp_file, players_col="NAME", rank_col='TOTAL / GP', ascending=ascending, sheet_name=sheet_name)
         self.players_col = 'Player Name'
 
     def get_player(self, name: str):
