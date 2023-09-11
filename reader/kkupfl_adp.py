@@ -6,7 +6,7 @@ from reader.base import FantasyBaseReader
 class KKUPFLAdpReader(FantasyBaseReader):
 
     def __init__(self, adp_file: str):
-        super().__init__("KKUPFL", adp_file, players_col='Player ', rank_col='Mock ADP')
+        super().__init__("KKUPFL ADP", adp_file, players_col='Player ', rank_col='Mock ADP')
         self.adp_col = 'Mock ADP'
 
     def get_player(self, name: str):
@@ -15,7 +15,6 @@ class KKUPFLAdpReader(FantasyBaseReader):
             'POS',
             'Mock ADP',
             'Last 5 Mock ADP',
-            'Last 5 Mock Trend',
             'Count',
             'Min',
             'Max',
