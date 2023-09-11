@@ -24,17 +24,27 @@ if __name__ == '__main__':
     kkupfl_adp = KKUPFLAdpReader(KKUPFL_ADP_FILE)
     kkupfl_scoring_23 = KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202223")
     kkupfl_scoring_22 = KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202122")
-    dom = DomReader(DOM_PROJECTIONS_FILE)
+    kkupfl_scoring_21 = KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202021")
+    dom_rk = DomReader(DOM_PROJECTIONS_FILE)
+    dom_ppg = DomReader(DOM_PROJECTIONS_FILE, rank_col='/GP', ascending=False)
 
-    pc = ProjectionsController(dom, kkupfl_adp, kkupfl_scoring_23, kkupfl_scoring_22)
+    pc = ProjectionsController(
+        dom_rk,
+        dom_ppg,
+        kkupfl_adp,
+        kkupfl_scoring_23,
+        kkupfl_scoring_22,
+        kkupfl_scoring_21
+    )
     pc.compare(
-        '^V.* Tara',
-        'N.* Schmal',
-        '^B.* Hor',
-        '^T.* Hall',
-        '^I.* Sams',
-        '^D.* Kuem',
-        '^A.* Ekb',
-        '^J.* Faul',
-        '^J.* Sand',
+        '^V.* Husso',
+        '^D.* Levi',
+        '^C.* Hart',
+        '^D.* Mercer',
+        '^L.* Couture',
+        '^D.* Perron',
+        '^R.* Smith',
+        '^R.* Hartman',
+        '^J.* Vrana',
+        '^D.* Strome',
     )

@@ -13,6 +13,7 @@ class KKUPFLScoringReader(FantasyBaseReader):
         return super().get_player(name)[[
             'Total Rank',
             'Player Name',
+            'Team',
             'Pos',
             'TOTAL',
             'TOTAL / GP',
