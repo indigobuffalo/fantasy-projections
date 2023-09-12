@@ -1,3 +1,5 @@
+import warnings
+
 from reader.base import FantasyBaseReader
 from reader.dom import DomReader
 from reader.kkupfl_adp import KKUPFLAdpReader
@@ -8,14 +10,20 @@ KKUPFL_SCORING_FILE = 'KKUPFL_2023_2024_Scoring.xlsx'
 DOM_PROJECTIONS_FILE = 'Dom_2023_2024_rankings.xlsx'
 
 
+# https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue
+warnings.simplefilter("ignore")
+
+
 class ProjectionsController:
     def __init__(self, *readers: FantasyBaseReader):
         self.readers = readers
 
     def compare(self, *players: str):
+        avg_ranks = {}
         for r in self.readers:
             print(r)
             res = r.get_players(*players)
+            import ipdb; ipdb.set_trace()
             print(f"({len(res)} players)")
             print(res.to_string(index=False))
 
