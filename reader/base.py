@@ -9,12 +9,13 @@ PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
 
 class FantasyBaseReader:
-    def __init__(self, kind: str, filename, name_col, rank_col, ascending=True, sheet_name=0):
+    def __init__(self, kind: str, filename, name_col, rank_col, weight=1, ascending=True, sheet_name=0):
         self.kind = kind
         self.rank_col = rank_col
         self.ascending = ascending
         self.df = pd.read_excel(PROJECTIONS_DIR / filename, sheet_name=sheet_name, index_col=None)
         self.name_col = name_col
+        self.weight = weight
 
     def __str__(self):
         return self.kind
@@ -47,4 +48,4 @@ class FantasyBaseReader:
         player_rankings = self.get_player(name)[[self.name_col, self.rank_col]]
         for name_and_rank in player_rankings.values:
             p_name, p_rank = name_and_rank[0], name_and_rank[1]
-            rankings[p_name].append(Rank(name=p_name, rank=p_rank, source=str(self)))
+            rankings[p_name].append(Rank(name=p_name, rank=p_rank, source=str(self), weight=self.weight))
