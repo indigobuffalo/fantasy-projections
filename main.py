@@ -1,5 +1,5 @@
 import warnings
-from collections import defaultdict
+from pprint import pprint
 
 from controller import ProjectionsController
 from reader.dom import DomReader
@@ -17,8 +17,18 @@ EP_PROJECTIONS_FILE = 'EP_202324.xlsx'
 # https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue
 warnings.simplefilter("ignore")
 
+
+def populate_average_rank(rankings: dict):
+    """{<player>: { "ranks": [R1, R2, ...], "count": len(ranks)}}"""
+    for player in rankings:
+        ranks = [r for r in rankings[player]['ranks']]
+        total_weighted_rank = sum([x.rank * x.weight for x in ranks])
+        total_weight = sum([x.weight for x in ranks])
+        rankings[player]['avg_rk'] = total_weighted_rank / total_weight
+
+
 if __name__ == '__main__':
-    avg_ranks = defaultdict(list)
+    aggregated_ranks = dict()
 
     # kkupfl
     kkupfl_adp = KKUPFLAdpReader(KKUPFL_ADP_FILE)
@@ -30,25 +40,37 @@ if __name__ == '__main__':
     dom_kkupfl_ppg = DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False)
 
     # puckin around
-    dom_pa_rk = DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around")
-    dom_pa_ppg = DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around", rank_col='/GP', ascending=False)
+    # dom_pa_rk = DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around")
+    # dom_pa_ppg = DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around", rank_col='/GP', ascending=False)
 
     # general
     ep = EliteProspectsReader(EP_PROJECTIONS_FILE)
 
     pc = ProjectionsController(
         dom_kkupfl_rk,
-        dom_pa_rk,
-        ep,
+        # dom_pa_rk,
         kkupfl_adp,
+        ep,
         dom_kkupfl_ppg,
-        dom_pa_ppg,
+        # dom_pa_ppg,
         kkupfl_scoring_23,
         kkupfl_scoring_22,
         kkupfl_scoring_21,
     )
     pc.compare(
-        avg_ranks,
-        '^B.* Tkach',
+        aggregated_ranks,
+        '^J.* Mark',
+        '^Se.* Bob',
+        '^T.* Chabo',
+        '^D.* Toew',
+        '^J.* Sand',
+        '^J.* Chy',
         '^J.* Miller',
+        '^Co.* McD',
+        '^Mitc.* Marn',
+        '^Nico.* Hisc',
+        '^Tyler.* Toff',
     )
+
+    populate_average_rank(aggregated_ranks)
+    pprint(sorted(aggregated_ranks.items(), key=lambda item: item[1]['avg_rk']))

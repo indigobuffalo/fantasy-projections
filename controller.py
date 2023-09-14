@@ -7,7 +7,7 @@ class ProjectionsController:
     def __init__(self, *readers: FantasyBaseReader):
         self.readers = readers
 
-    def compare(self, avg_ranks: defaultdict[list], *players: str):
+    def compare(self, avg_ranks: dict, *players: str):
         for r in self.readers:
             r.print_fmt()
             res = r.get_players(*players)

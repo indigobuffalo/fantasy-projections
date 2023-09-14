@@ -44,8 +44,21 @@ class FantasyBaseReader:
             res = pd.concat(player_dfs)
         return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
 
-    def populate_player_ranks(self, name: str, rankings: defaultdict[list]):
-        player_rankings = self.get_player(name)[[self.name_col, self.rank_col]]
-        for name_and_rank in player_rankings.values:
-            p_name, p_rank = name_and_rank[0], name_and_rank[1]
-            rankings[p_name].append(Rank(name=p_name, rank=p_rank, source=str(self), weight=self.weight))
+    @staticmethod
+    def inc_weight_count(name: str, rankings: dict):
+        if rankings[name].get('count'):
+            rankings[name]['count'] = rankings[name]['count'] + 1
+        else:
+            rankings[name]['count'] = 1
+
+    def append_rank(self, name: str, rank: int, rankings: dict):
+        if rankings.get(name) and rankings[name].get('ranks'):
+            rankings[name]['ranks'].append(Rank(name=name, rank=rank, source=str(self), weight=self.weight))
+        else:
+            rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
+
+    def populate_player_ranks(self, name: str, rankings: dict):
+        player_rankings = self.get_player(name)[self.rank_col]
+        for rank in player_rankings.values:
+            self.append_rank(name, rank, rankings)
+            self.inc_weight_count(name, rankings)
