@@ -20,7 +20,7 @@ class FantasyBaseReader:
     def __str__(self):
         return self.kind
 
-    def print_fmt(self):
+    def print_header(self):
         chars = len(str(self))
         border = '=' * chars
         print(f"{border}\n{self}\n{border}")
@@ -57,7 +57,7 @@ class FantasyBaseReader:
         else:
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
-    def populate_player_ranks(self, name: str, rankings: dict):
+    def record_player_ranks(self, name: str, rankings: dict):
         player_rankings = self.get_player(name)[self.rank_col]
         for rank in player_rankings.values:
             self.append_rank(name, rank, rankings)

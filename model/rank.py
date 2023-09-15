@@ -4,3 +4,6 @@ class Rank:
         self.rank = rank
         self.source = source
         self.weight = weight
+
+    def __str__(self):
+        return f"{self.source}: {round(self.rank, 2)}"
