@@ -9,7 +9,7 @@ class EliteProspectsReader(FantasyBaseReader):
         super().__init__(f"Elite Prospects {rank_col}", adp_file, name_col="Player",
                          rank_col=rank_col, ascending=ascending)
         self.players_col = 'NAME'
-        self.weight = 15
+        self.weight = 10
 
     def get_player(self, name: str):
         return super().get_player(name)[[
