@@ -1,7 +1,7 @@
-import csv
 import warnings
 
 from controller import ProjectionsController, populate_average_rank, write_avg_ranks_to_csv
+from input import players
 from reader.dom import DomReader
 from reader.ep import EliteProspectsReader
 from reader.kkupfl_adp import KKUPFLAdpReader
@@ -21,19 +21,13 @@ warnings.simplefilter("ignore")
 
 
 def get_kkupfl_controller():
-    kkupfl_adp = KKUPFLAdpReader(KKUPFL_ADP_FILE)
     kkupfl_scoring_23 = KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202223")
     kkupfl_scoring_22 = KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202122")
     kkupfl_scoring_21 = KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202021")
     dom_rk = DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl")
     dom_ppg = DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False)
-    ep = EliteProspectsReader(EP_PROJECTIONS_FILE)
-    laidlaw = SteveLaidlawReader(STEVE_LAIDLAW_PROJECTIONS_FILE)
     return ProjectionsController(
         dom_rk,
-        kkupfl_adp,
-        ep,
-        laidlaw,
         dom_ppg,
         kkupfl_scoring_23,
         kkupfl_scoring_22,
@@ -44,29 +38,27 @@ def get_kkupfl_controller():
 def get_puckin_around_controller():
     dom_rk = DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around")
     dom_ppg = DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around", rank_col='/GP', ascending=False)
+    return ProjectionsController(dom_rk, dom_ppg)
+
+
+def get_common_controller():
+    kkupfl_adp = KKUPFLAdpReader(KKUPFL_ADP_FILE)
     ep = EliteProspectsReader(EP_PROJECTIONS_FILE)
     laidlaw = SteveLaidlawReader(STEVE_LAIDLAW_PROJECTIONS_FILE)
-    return ProjectionsController(dom_rk, dom_ppg, ep, laidlaw)
+    return ProjectionsController(ep, laidlaw, kkupfl_adp)
 
 
 if __name__ == '__main__':
     aggregated_ranks = dict()
+    common_controller = get_common_controller()
     pa_controller = get_puckin_around_controller()
     # kkupfl_controller = get_kkupfl_controller()
     # kkupfl_controller.compare_players(
         # aggregated_ranks,
         # '.*',
     # )
-    pa_controller.compare_players(
-        aggregated_ranks,
-        '^J.* Mark',
-        '^Se.* Bob',
-        '^T.* Chabo',
-        '^D.* Toew',
-        '^J.* Sand',
-        '^J.* Chy',
-        '^J.* Miller',
-    )
+    common_controller.compare_players(aggregated_ranks, players)
+    pa_controller.compare_players(aggregated_ranks, players)
     populate_average_rank(aggregated_ranks)
     sorted_players = sorted(aggregated_ranks.items(), key=lambda item: item[1]['avg_rk'])
     write_avg_ranks_to_csv(sorted_players)

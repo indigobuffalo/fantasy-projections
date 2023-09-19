@@ -56,7 +56,7 @@ class FantasyBaseReader:
         """
         return self.df.loc[self.df[self.name_col].str.contains(name, na=False, case=False)]
 
-    def get_players(self, *players: str):
+    def get_players(self, players: list[str]):
         """
         Get rows of players whose names match the passed regexes
         """
