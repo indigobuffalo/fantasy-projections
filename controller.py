@@ -4,9 +4,14 @@ from pathlib import Path
 from pandas import DataFrame
 
 from reader.base import FantasyBaseReader
-
+from reader.ep import EliteProspectsReader
+from reader.kkupfl_adp import KKUPFLAdpReader
+from reader.laidlaw import SteveLaidlawReader
 
 OUTPUT_DIR = Path(__file__).parent / "output"
+KKUPFL_ADP_FILE = 'KKUPFL_2023_2024_Mock_ADP.xlsx'
+EP_PROJECTIONS_FILE = 'EP_202324.xlsx'
+STEVE_LAIDLAW_PROJECTIONS_FILE = 'Steve_Laidlaw_2023_24.xlsx'
 
 
 def populate_average_rank(rankings: dict):
@@ -31,7 +36,12 @@ def write_avg_ranks_to_csv(sorted_ranks: list):
 
 class ProjectionsController:
     def __init__(self, *readers: FantasyBaseReader):
-        self.readers = readers
+
+        kkupfl_adp = KKUPFLAdpReader(KKUPFL_ADP_FILE)
+        ep = EliteProspectsReader(EP_PROJECTIONS_FILE)
+        laidlaw = SteveLaidlawReader(STEVE_LAIDLAW_PROJECTIONS_FILE)
+        base_readers = [kkupfl_adp, ep, laidlaw]
+        self.readers = base_readers + list(readers)
 
     @staticmethod
     def print_results(results: DataFrame):

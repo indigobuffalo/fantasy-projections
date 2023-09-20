@@ -1,9 +1,6 @@
-players = [
-    '^J.* Mark',
-    '^Se.* Bob',
-    '^T.* Chabo',
-    '^D.* Toew',
-    '^J.* Sand',
-    '^J.* Chy',
+select_players = [
+    '^C.* Jarnk',
     '^J.* Miller',
 ]
+
+all_players = [ '.*' ]

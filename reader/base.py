@@ -9,6 +9,7 @@ from model.rank import Rank
 PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
 name_correction_map = {
+    "ALEXANDER OVECHKIN": "Alex Ovechkin",
     "FREDERIK ANDERSON": "Frederik Andersen",
     "JOEL ERIKSSON-EK": "Joel Eriksson Ek",
     "JT MILLER": "J.T. Miller",
