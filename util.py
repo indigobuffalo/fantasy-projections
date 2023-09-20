@@ -11,11 +11,13 @@ def convert_to_int_safe(element):
         pass
     return element
 
+
 def convert_to_csv(ep_line: list):
     first = ep_line.pop(1)
     last = ep_line.pop(1)
     ep_line.insert(1, f'{first} {last}')
     return ep_line
+
 
 def split_ep_paste(blob: str):
     split = re.findall(r'(\d+ ([A-Za-z ])+ ([A-Z/])+([A-Z])* [A-Z]+ \d+ \d+ \d+ \d+)', blob)

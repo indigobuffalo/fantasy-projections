@@ -8,6 +8,18 @@ from model.rank import Rank
 
 PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
+name_correction_map = {
+    "FREDERIK ANDERSON": "Frederik Andersen",
+    "JOEL ERIKSSON-EK": "Joel Eriksson Ek",
+    "JT MILLER": "J.T. Miller",
+    "MATTHEW BOLDY": "Matt Boldy",
+    "MICHAEL MATHESON": "Mike Matheson",
+    "MITCHELL MARNER": "Mitch Marner",
+    "PHOENIX COPLEY": "Pheonix Copley",
+    "PILLIPP GRUBAUER": "Philipp Grubauer",
+    "VITEK VANICEK": "Vitek Vanecek"
+}
+
 
 class FantasyBaseReader:
     def __init__(self, kind: str, filename, name_col, rank_col, weight=1, ascending=True, sheet_name=0):
@@ -22,27 +34,28 @@ class FantasyBaseReader:
     def __str__(self):
         return self.kind
 
+    @staticmethod
+    def normalize_spelling(name):
+        upper = name.upper()
+        return name_correction_map[upper] if upper in name_correction_map else name
+
+    @staticmethod
+    def normalize_accents(name):
+        return unidecode(name)
+
+    @staticmethod
+    def normalize_capitalization(name):
+        return name.title()
+
     def normalize_player_names(self):
         def normalize(name):
-            if isinstance(name, str):
-                if name == "Frederik Anderson":
-                    name = "Frederik Andersen"
-                if name == "Joel Eriksson-Ek":
-                    name = "Joel Eriksson Ek"
-                if name == "Matthew Boldy":
-                    name = "Matt Boldy"
-                if name == "Michael Matheson":
-                    name = "Mike Matheson"
-                if name == "Mitchell Marner":
-                    name = "Mitch Marner"
-                if name == "Phoenix Copley":
-                    name = "Pheonix Copley"
-                if name == "Phillipp Grubauer":
-                    name = "Philipp Grubauer"
-                if name == "Vitek Vanicek":
-                    name = "Vitek Vanecek"
-                return unidecode(name).title()
+            if not isinstance(name, str):
+                return name
+            name = self.normalize_spelling(name)
+            name = self.normalize_accents(name)
+            name = self.normalize_capitalization(name)
             return name
+
         self.df[self.name_col] = self.df[self.name_col].apply(normalize)
 
     def print_header(self):
