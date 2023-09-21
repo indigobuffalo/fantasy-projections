@@ -6,8 +6,14 @@ from reader.base import FantasyBaseReader
 class EliteProspectsReader(FantasyBaseReader):
 
     def __init__(self, adp_file: str, rank_col='Rank', ascending=True):
-        super().__init__(f"Elite Prospects {rank_col}", adp_file, name_col="Player",
-                         rank_col=rank_col, ascending=ascending)
+        super().__init__(
+            f"Elite Prospects {rank_col}",
+            adp_file,
+            name_col="Player",
+            rank_col=rank_col,
+            team_col="Team",
+            ascending=ascending
+        )
         self.players_col = 'NAME'
         self.weight = 10
 

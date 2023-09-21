@@ -37,14 +37,14 @@ class RankingsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, players: list[str]):
+    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str]):
         reader.print_header()
         results = reader.get_players(players)
         self.print_results(results)
         for p in results[reader.name_col]:
-            reader.record_player_ranks(p, avg_ranks)
+            reader.record_player_ranks(p, avg_ranks, teams)
         return results
 
-    def compare_players(self, avg_ranks: dict, players: list[str]):
+    def compare_players(self, avg_ranks: dict, teams: set, players: list[str]):
         for reader in self.readers:
-            self.run_reader(reader, avg_ranks, players)
+            self.run_reader(reader, avg_ranks, teams, players)

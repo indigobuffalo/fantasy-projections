@@ -6,7 +6,7 @@ from unidecode import unidecode
 
 from model.rank import Rank
 
-PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
+PROJECTIONS_DIR = Path(__file__).parent.parent / "rankings"
 
 name_correction_map = {
     "ALEXANDER OVECHKIN": "Alex Ovechkin",
@@ -23,11 +23,12 @@ name_correction_map = {
 
 
 class FantasyBaseReader:
-    def __init__(self, kind: str, filename, name_col, rank_col, weight=1, ascending=True, sheet_name=0):
+    def __init__(self, kind: str, filename, name_col, rank_col, team_col=None, weight=1, ascending=True, sheet_name=0):
         self.kind = kind
         self.ascending = ascending
         self.rank_col = rank_col
         self.name_col = name_col
+        self.team_col = team_col
         self.weight = weight
         self.df = pd.read_excel(PROJECTIONS_DIR / filename, sheet_name=sheet_name, index_col=None)
         self.normalize_player_names()
@@ -93,8 +94,11 @@ class FantasyBaseReader:
         else:
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
-    def record_player_ranks(self, name: str, rankings: dict):
-        player_rankings = self.get_player(name)[self.rank_col]
+    def record_player_ranks(self, name: str, rankings: dict, teams: set):
+        player = self.get_player(name)
+        if self.team_col:
+            teams.add(player[self.team_col].values[0])
+        player_rankings = player[self.rank_col]
         for rank in player_rankings.values:
             self.append_rank(name, rank, rankings)
             self.inc_weight_count(name, rankings)

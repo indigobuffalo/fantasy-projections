@@ -68,14 +68,15 @@ if __name__ == '__main__':
     parser.add_argument('count', metavar='N', type=int, nargs='?', default=10, help='Number of rows to return when "-t/--top" flag used.')
     parser.add_argument('league', type=League, choices=list(League), help='The league the rankings are for')
 
-    opts = parser.parse_args()
-    controller = RankingsController(get_readers(opts.league))
+    args = parser.parse_args()
+    controller = RankingsController(get_readers(args.league))
 
-    if opts.write:
-        controller.compare_players(aggregated_ranks, all_players)
+    if args.write:
+        controller.compare_players(aggregated_ranks, teams, all_players)
         populate_average_rank(aggregated_ranks)
         sorted_players = sorted(aggregated_ranks.items(), key=lambda item: item[1]['avg_rk'])
         write_avg_ranks_to_csv(sorted_players)
     else:
-        controller.compare_players(aggregated_ranks, select_players)
+        controller.compare_players(aggregated_ranks, teams, select_players)
+        print(teams)
 
