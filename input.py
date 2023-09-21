@@ -3,4 +3,4 @@ select_players = [
     '^J.* Miller',
 ]
 
-all_players = [ '.*' ]
+all_players = ['.*']
