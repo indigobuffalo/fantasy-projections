@@ -16,16 +16,8 @@ class JeffMaiScheduleReader(FantasyBaseReader):
             header=1
         )
 
-    def get_team(self, name: str):
-        return super().filter_primary_row(name)[[
-            'Rank',
-            'Player',
-            'Pos',
-            'Team',
-            'GP',
-            'G',
-            'A',
-            'P',
-            'GP.1',
-            'W',
+    def filter_primary_row(self, filter_regex: str):
+        return super().filter_primary_row(filter_regex)[[
+            'team',
+            'Grand Total',
         ]]

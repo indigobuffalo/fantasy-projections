@@ -3,7 +3,9 @@ from pathlib import Path
 
 from pandas import DataFrame
 
+from model.league import League
 from reader.base import FantasyBaseReader
+from reader.schedule import JeffMaiScheduleReader
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 
@@ -17,8 +19,10 @@ def populate_average_rank(rankings: dict):
         rankings[player]['avg_rk'] = total_weighted_rank / total_weight
 
 
-def write_avg_ranks_to_csv(sorted_ranks: list):
-    with open(OUTPUT_DIR / "average_ranks.csv", "w", newline="") as f:
+def write_avg_ranks_to_csv(league: League, sorted_ranks: list):
+    outfile = OUTPUT_DIR / f"{league}_ranks.csv"
+    print(f"Writing results for {league} to {outfile}")
+    with open(outfile, "w", newline="") as f:
         writer = csv.writer(f)
         for rank_info in sorted_ranks:
             name = rank_info[0]
@@ -37,14 +41,19 @@ class RankingsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str]):
-        reader.print_header()
-        results = reader.filter_primary_rows(players)
-        self.print_results(results)
-        for p in results[reader.primary_col]:
-            reader.record_player_ranks(p, avg_ranks, teams)
+    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str], verbose=True):
+        if verbose:
+            reader.print_header()
+        if isinstance(reader, JeffMaiScheduleReader):
+            results = reader.filter_primary_rows(list(teams))
+        else:
+            results = reader.filter_primary_rows(players)
+            for p in results[reader.primary_col]:
+                reader.record_player_ranks(p, avg_ranks, teams)
+        if verbose:
+            self.print_results(results)
         return results
 
-    def compare_players(self, avg_ranks: dict, teams: set, players: list[str]):
+    def compare_players(self, avg_ranks: dict, teams: set, players: list[str], verbose=True):
         for reader in self.readers:
-            self.run_reader(reader, avg_ranks, teams, players)
+            self.run_reader(reader, avg_ranks, teams, players, verbose=verbose)

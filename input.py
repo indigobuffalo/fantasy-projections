@@ -4,6 +4,5 @@ select_players = [
     '^A.* Duc',
     '^J.* Hug',
     '^Er.* karl',
+    '^Tr.* Zeg',
 ]
-
-all_players = ['.*']

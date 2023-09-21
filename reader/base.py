@@ -5,7 +5,7 @@ from unidecode import unidecode
 
 from model.rank import Rank
 
-PROJECTIONS_DIR = Path(__file__).parent.parent / "rankings"
+PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
 name_correction_map = {
     "ALEXANDER OVECHKIN": "Alex Ovechkin",
@@ -31,7 +31,7 @@ class FantasyBaseReader:
         self.team_col = team_col
         self.weight = weight
         self.df = pd.read_excel(PROJECTIONS_DIR / filename, sheet_name=sheet_name, index_col=None, header=header)
-        self.normalize_player_names()
+        self.normalize()
 
     def __str__(self):
         return self.kind
@@ -49,8 +49,12 @@ class FantasyBaseReader:
     def normalize_capitalization(name):
         return name.title()
 
-    def normalize_player_names(self):
-        def normalize(name):
+    def is_team_reader(self):
+        return self.primary_col == "team"
+
+    def normalize(self):
+
+        def normalize_player_names(name):
             if not isinstance(name, str):
                 return name
             name = self.normalize_spelling(name)
@@ -58,7 +62,14 @@ class FantasyBaseReader:
             name = self.normalize_capitalization(name)
             return name
 
-        self.df[self.primary_col] = self.df[self.primary_col].apply(normalize)
+        def normalize_team_names(name):
+            if not isinstance(name, str):
+                return name
+            return name.upper()
+
+        normalize_fn = normalize_team_names if self.is_team_reader() else normalize_player_names
+
+        self.df[self.primary_col] = self.df[self.primary_col].apply(normalize_fn)
 
     def print_header(self):
         chars = len(str(self))
@@ -97,7 +108,10 @@ class FantasyBaseReader:
     def record_player_ranks(self, name: str, rankings: dict, teams: set):
         player = self.filter_primary_row(name)
         if self.team_col:
-            teams.add(player[self.team_col].values[0])
+            if len(player[self.team_col].values) > 0:
+                teams.add(player[self.team_col].values[0])
+            else:
+                print(f"No team value for {self} {name}: {player}")
         player_rankings = player[self.rank_col]
         for rank in player_rankings.values:
             self.append_rank(name, rank, rankings)
