@@ -5,20 +5,19 @@ from reader.base import FantasyBaseReader
 
 class EliteProspectsReader(FantasyBaseReader):
 
-    def __init__(self, adp_file: str, rank_col='Rank', ascending=True):
+    def __init__(self, filename: str, rank_col='Rank'):
         super().__init__(
             f"Elite Prospects {rank_col}",
-            adp_file,
-            name_col="Player",
+            filename,
+            primary_col="Player",
             rank_col=rank_col,
             team_col="Team",
-            ascending=ascending
         )
         self.players_col = 'NAME'
         self.weight = 10
 
-    def get_player(self, name: str):
-        return super().get_player(name)[[
+    def filter_primary_row(self, filter_regex: str):
+        return super().filter_primary_row(filter_regex)[[
             'Rank',
             'Player',
             'Pos',

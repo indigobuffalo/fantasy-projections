@@ -39,9 +39,9 @@ class RankingsController:
 
     def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str]):
         reader.print_header()
-        results = reader.get_players(players)
+        results = reader.filter_primary_rows(players)
         self.print_results(results)
-        for p in results[reader.name_col]:
+        for p in results[reader.primary_col]:
             reader.record_player_ranks(p, avg_ranks, teams)
         return results
 

@@ -5,11 +5,11 @@ from reader.base import FantasyBaseReader
 
 class DomReader(FantasyBaseReader):
 
-    def __init__(self, adp_file: str, league: str, rank_col='RK', ascending=True):
+    def __init__(self, filename: str, league: str, rank_col='RK', ascending=True):
         super().__init__(
             f"DOM {rank_col} ({league.upper()})",
-            adp_file,
-            name_col="NAME",
+            filename,
+            primary_col="NAME",
             rank_col=rank_col,
             team_col="TEAM",
             ascending=ascending,
@@ -18,12 +18,12 @@ class DomReader(FantasyBaseReader):
         self.players_col = 'NAME'
         self.weight = 60 if self.rank_col == 'RK' else 0  # don't weigh /GP rank
 
-    def get_player(self, name: str):
-        return super().get_player(name)[[
+    def filter_primary_row(self, filter_regex: str):
+        return super().filter_primary_row(filter_regex)[[
+            'RK',
             'NAME',
             'TEAM',
             'POS',
-            'RK',
             'FP',
             '/GP',
             'AGE',

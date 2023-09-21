@@ -5,15 +5,15 @@ from reader.base import FantasyBaseReader
 
 class SteveLaidlawReader(FantasyBaseReader):
 
-    def __init__(self, adp_file: str, rank_col='Rank', ascending=True):
-        super().__init__(f"Steve Laidlaw {rank_col}", adp_file, name_col="Name", rank_col=rank_col, ascending=ascending, sheet_name="Skater Rankings")
+    def __init__(self, filename: str, rank_col='Rank'):
+        super().__init__(f"Steve Laidlaw {rank_col}", filename, primary_col="Name", rank_col=rank_col, sheet_name="Skater Rankings")
         self.players_col = 'NAME'
         self.weight = 15
 
-    def get_player(self, name: str):
-        return super().get_player(name)[[
-            'Name',
+    def filter_primary_row(self, filter_regex: str):
+        return super().filter_primary_row(filter_regex)[[
             'Rank',
+            'Name',
             'GP',
             'G',
             'A',

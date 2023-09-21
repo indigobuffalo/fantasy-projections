@@ -44,11 +44,11 @@ def get_readers(league):
     ]
     if league == league.KKUPFL:
         readers.extend([
+            DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl"),
+            DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False),
             KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202223"),
             KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202122"),
             KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202021"),
-            DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl"),
-            DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False)
         ])
     elif league == league.PUCKIN_AROUND:
         readers.extend([

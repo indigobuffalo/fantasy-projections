@@ -5,13 +5,13 @@ from reader.base import FantasyBaseReader
 
 class KKUPFLScoringReader(FantasyBaseReader):
 
-    def __init__(self, adp_file: str, sheet_name: str, ascending=False):
-        super().__init__(f"KKUPFL Scoring {sheet_name}", adp_file, name_col="Player Name", rank_col='TOTAL / GP', ascending=ascending, sheet_name=sheet_name)
+    def __init__(self, filename: str, sheet_name: str, ascending=False):
+        super().__init__(f"KKUPFL Scoring {sheet_name}", filename, primary_col="Player Name", rank_col='TOTAL / GP', ascending=ascending, sheet_name=sheet_name)
         self.players_col = 'Player Name'
         self.weight = 0
 
-    def get_player(self, name: str):
-        return super().get_player(name)[[
+    def filter_primary_row(self, filter_regex: str):
+        return super().filter_primary_row(filter_regex)[[
             'Total Rank',
             'Player Name',
             'Team',

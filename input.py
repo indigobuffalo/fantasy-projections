@@ -1,7 +1,6 @@
 select_players = [
-    '^C.* Jarnk',
-    '^J.* Miller',
-    '^C.* Mcda',
+    '^J.* Tavares',
+    '^S.* Crosby',
     '^A.* Duc',
     '^J.* Hug',
     '^Er.* karl',

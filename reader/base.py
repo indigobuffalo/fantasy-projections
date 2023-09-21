@@ -1,4 +1,3 @@
-from collections import defaultdict
 from pathlib import Path
 
 import pandas as pd
@@ -23,14 +22,15 @@ name_correction_map = {
 
 
 class FantasyBaseReader:
-    def __init__(self, kind: str, filename, name_col, rank_col, team_col=None, weight=1, ascending=True, sheet_name=0):
+    def __init__(self, kind: str, filename, primary_col, rank_col, team_col=None,
+                 weight=1, ascending=True, sheet_name=0, header=0):
         self.kind = kind
         self.ascending = ascending
         self.rank_col = rank_col
-        self.name_col = name_col
+        self.primary_col = primary_col
         self.team_col = team_col
         self.weight = weight
-        self.df = pd.read_excel(PROJECTIONS_DIR / filename, sheet_name=sheet_name, index_col=None)
+        self.df = pd.read_excel(PROJECTIONS_DIR / filename, sheet_name=sheet_name, index_col=None, header=header)
         self.normalize_player_names()
 
     def __str__(self):
@@ -58,27 +58,27 @@ class FantasyBaseReader:
             name = self.normalize_capitalization(name)
             return name
 
-        self.df[self.name_col] = self.df[self.name_col].apply(normalize)
+        self.df[self.primary_col] = self.df[self.primary_col].apply(normalize)
 
     def print_header(self):
         chars = len(str(self))
         border = '=' * chars
         print(f"{border}\n{self}\n{border}")
 
-    def get_player(self, name: str):
+    def filter_primary_row(self, filter_regex: str):
         """
-        Get rows of players whose names match the passed regex
+        Get rows with primary column values that satisfy the passed regex filter
         """
-        return self.df.loc[self.df[self.name_col].str.contains(name, na=False, case=False)]
+        return self.df.loc[self.df[self.primary_col].str.contains(filter_regex, na=False, case=False)]
 
-    def get_players(self, players: list[str]):
+    def filter_primary_rows(self, filter_regexes: list[str]):
         """
-        Get rows of players whose names match the passed regexes
+        Get rows with primary column values that satisfy the passed regex filters
         """
-        player_dataframes = list()
-        for p in players:
-            player_dataframes.append(self.get_player(p))
-        res = pd.concat(player_dataframes)
+        dataframes = list()
+        for r in filter_regexes:
+            dataframes.append(self.filter_primary_row(r))
+        res = pd.concat(dataframes)
         return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
 
     @staticmethod
@@ -95,7 +95,7 @@ class FantasyBaseReader:
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
     def record_player_ranks(self, name: str, rankings: dict, teams: set):
-        player = self.get_player(name)
+        player = self.filter_primary_row(name)
         if self.team_col:
             teams.add(player[self.team_col].values[0])
         player_rankings = player[self.rank_col]
