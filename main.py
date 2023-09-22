@@ -47,6 +47,8 @@ def get_readers(league):
             DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around"),
             DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around", rank_col='/GP', ascending=False)
         ])
+    # TODO: fix games per week
+    # readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER, sheet_name="Games per week"))
     readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER))
     return readers
 

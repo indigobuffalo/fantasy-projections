@@ -42,15 +42,14 @@ class RankingsController:
         print(results.to_string(index=False))
 
     def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str], verbose=True):
-        reader.print_header()
         if isinstance(reader, JeffMaiScheduleReader):
-            self.print_results(reader.filter_primary_rows(list(teams)))
-            self.print_results(reader.filter_weeks(list(teams), 23, 25))
+            results = reader.filter_primary_rows(list(teams))
         else:
             results = reader.filter_primary_rows(players)
-            self.print_results(results)
             for p in results[reader.primary_col]:
                 reader.record_player_ranks(p, avg_ranks, teams)
+        reader.print_header()
+        self.print_results(results)
 
     def compare_players(self, avg_ranks: dict, teams: set, players: list[str], verbose=True):
         for reader in self.readers:
