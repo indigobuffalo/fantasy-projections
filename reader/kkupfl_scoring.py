@@ -17,5 +17,12 @@ class KKUPFLScoringReader(FantasyBaseReader):
             'Team',
             'Pos',
             'TOTAL',
+            'GP',
             'TOTAL / GP',
+            'G',
+            'A',
+            'Pts',
+            'SOG',
+            'Hits',
+            'BS'
         ]]

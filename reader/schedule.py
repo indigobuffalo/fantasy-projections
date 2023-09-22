@@ -7,7 +7,7 @@ class JeffMaiScheduleReader(FantasyBaseReader):
 
     def __init__(self, filename: str, rank_col='Grand Total', ascending=False, sheet_name="Off night games per week"):
         super().__init__(
-            f"Jeff Mai Schedule {rank_col}",
+            f"Jeff Mai Schedule ({rank_col})",
             filename,
             primary_col="team",
             rank_col=rank_col,
