@@ -12,8 +12,8 @@ class KKUPFLScoringReader(FantasyBaseReader):
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
-            'Total Rank',
-            'Player Name',
+            self.rank_col,
+            self.primary_col,
             'Team',
             'Pos',
             'TOTAL',

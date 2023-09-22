@@ -20,7 +20,7 @@ class NHLReader(FantasyBaseReader):
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
-            'Points',
-            'Player',
+            self.rank_col,
+            self.primary_col,
             'Team',
         ]]

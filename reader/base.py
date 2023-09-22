@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import ipdb
 import pandas as pd
 from unidecode import unidecode
 
@@ -90,7 +91,10 @@ class FantasyBaseReader:
         for r in filter_regexes:
             dataframes.append(self.filter_primary_row(r))
         res = pd.concat(dataframes)
-        return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
+        try:
+            return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
+        except:
+            ipdb.set_trace()
 
     @staticmethod
     def inc_weight_count(name: str, rankings: dict):

@@ -12,8 +12,8 @@ class KKUPFLAdpReader(FantasyBaseReader):
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
-            'Mock ADP',
-            'Player ',
+            self.rank_col,
+            self.primary_col,
             'POS',
             'Last 5 Mock ADP',
             'Count',

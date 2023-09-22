@@ -12,8 +12,8 @@ class SteveLaidlawReader(FantasyBaseReader):
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
-            'Rank',
-            'Name',
+            self.rank_col,
+            self.primary_col,
             'GP',
             'G',
             'A',

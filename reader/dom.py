@@ -20,13 +20,12 @@ class DomReader(FantasyBaseReader):
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
-            'RK',
-            'NAME',
+            self.rank_col,
+            self.primary_col,
+            'AGE',
             'TEAM',
             'POS',
             'FP',
-            '/GP',
-            'AGE',
             'GP',
             'G',
             'A',
