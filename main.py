@@ -19,7 +19,6 @@ KKUPFL_ADP_FILE = '23-24-KKUPFL-Mock-ADP.xlsx'
 KKUPFL_SCORING_FILE = '23-24-KKUPFL-Scoring.xlsx'
 NHL_PROJECTIONS_FILE = '23-24-NHL-Dot-Com-projections.xlsx'
 STEVE_LAIDLAW_PROJECTIONS_FILE = '23-24-Steve-Laidlaw-Projections.xlsx'
-
 JEFF_MAI_SCHEDULE_READER = '23-24-Jeff-Mai-Schedule.xlsx'
 
 
@@ -27,7 +26,7 @@ JEFF_MAI_SCHEDULE_READER = '23-24-Jeff-Mai-Schedule.xlsx'
 warnings.simplefilter("ignore")
 
 
-def get_readers(league):
+def get_readers(league, schedule=True):
     readers = [
         KKUPFLAdpReader(KKUPFL_ADP_FILE),
         EliteProspectsReader(EP_PROJECTIONS_FILE),
@@ -47,9 +46,9 @@ def get_readers(league):
             DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around"),
             DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around", rank_col='/GP', ascending=False)
         ])
-    # TODO: fix games per week
-    readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER, sheet_name="Games per week"))
-    readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER))
+    if schedule:
+        readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER, sheet_name="Games per week"))
+        readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER))
     return readers
 
 
@@ -64,12 +63,13 @@ if __name__ == '__main__':
     parser.add_argument('league', type=League, choices=list(League), help='The league the projections are for')
 
     args = parser.parse_args()
-    controller = RankingsController(get_readers(args.league))
 
     if args.write:
-        controller.compare_players(aggregated_ranks, teams, ['.*'], verbose=False)
+        controller = RankingsController(get_readers(args.league, schedule=False))
+        controller.compare_players(aggregated_ranks, teams, ['.*'], write=True)
         populate_average_rank(aggregated_ranks)
         sorted_players = sorted(aggregated_ranks.items(), key=lambda item: item[1]['avg_rk'])
         write_avg_ranks_to_csv(args.league, sorted_players)
     else:
+        controller = RankingsController(get_readers(args.league))
         controller.compare_players(aggregated_ranks, teams, select_players)

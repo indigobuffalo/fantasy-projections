@@ -18,7 +18,6 @@ class KKUPFLScoringReader(FantasyBaseReader):
             'Pos',
             'TOTAL',
             'GP',
-            'TOTAL / GP',
             'G',
             'A',
             'Pts',

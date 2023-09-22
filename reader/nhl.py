@@ -11,16 +11,16 @@ class NHLReader(FantasyBaseReader):
             f"NHL.com (Points)",
             filename,
             primary_col="Player",
-            rank_col='Points',
-            sheet_name="Sheet 1",
-            ascending=False
+            rank_col='Rank',
+            sheet_name="Sheet 1"
         )
         self.players_col = 'Player'
-        self.weight = 10
+        self.weight = 75
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
             self.rank_col,
             self.primary_col,
             'Team',
+            'Points'
         ]]

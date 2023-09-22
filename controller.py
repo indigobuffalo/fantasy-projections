@@ -41,16 +41,17 @@ class RankingsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str], verbose=True):
-        if isinstance(reader, JeffMaiScheduleReader):
+    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str], write=False):
+        if isinstance(reader, JeffMaiScheduleReader) and not write:
             results = reader.filter_primary_rows(list(teams))
         else:
             results = reader.filter_primary_rows(players)
             for p in results[reader.primary_col]:
                 reader.record_player_ranks(p, avg_ranks, teams)
-        reader.print_header()
-        self.print_results(results)
+        if not write:
+            reader.print_header()
+            self.print_results(results)
 
-    def compare_players(self, avg_ranks: dict, teams: set, players: list[str], verbose=True):
+    def compare_players(self, avg_ranks: dict, teams: set, players: list[str], write=False):
         for reader in self.readers:
-            self.run_reader(reader, avg_ranks, teams, players, verbose=verbose)
+            self.run_reader(reader, avg_ranks, teams, players, write=write)

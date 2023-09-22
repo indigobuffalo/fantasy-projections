@@ -16,7 +16,7 @@ class DomReader(FantasyBaseReader):
             sheet_name="The List"
         )
         self.players_col = 'NAME'
-        self.weight = 60 if self.rank_col == 'RK' else 0  # don't weigh /GP rank
+        self.weight = 700 if self.rank_col == 'RK' else 0  # don't weigh /GP rank
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[

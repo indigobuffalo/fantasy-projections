@@ -51,14 +51,7 @@ class JeffMaiScheduleReader(FantasyBaseReader):
     def floats_to_ints(df: DataFrame, columns: list):
         for c in columns:
             if isinstance(df[c].values[0], numpy.float64):
-                try:
-                    df[c] = df[c].astype(int)
-                except:
-                    col = c
-                    print(col)
-                    print(df[col])
-                    import ipdb;ipdb.set_trace()
-                    print()
+                df[c] = df[c].astype(int)
 
     @staticmethod
     def jeff_mai_weeks_to_yahoo_weeks(df: DataFrame, columns: list):

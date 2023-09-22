@@ -14,7 +14,7 @@ class EliteProspectsReader(FantasyBaseReader):
             team_col="Team",
         )
         self.players_col = 'NAME'
-        self.weight = 10
+        self.weight = 75
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[

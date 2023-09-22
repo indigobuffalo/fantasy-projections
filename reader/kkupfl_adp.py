@@ -8,7 +8,7 @@ class KKUPFLAdpReader(FantasyBaseReader):
     def __init__(self, filename: str):
         super().__init__("KKUPFL ADP", filename, primary_col='Player ', rank_col='Mock ADP')
         self.adp_col = 'Mock ADP'
-        self.weight = 30
+        self.weight = 75
 
     def filter_primary_row(self, filter_regex: str):
         return super().filter_primary_row(filter_regex)[[
