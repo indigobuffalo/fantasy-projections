@@ -9,6 +9,7 @@ from reader.ep import EliteProspectsReader
 from reader.kkupfl_adp import KKUPFLAdpReader
 from reader.kkupfl_scoring import KKUPFLScoringReader
 from reader.laidlaw import SteveLaidlawReader
+from reader.nhl import NHLReader
 from reader.schedule import JeffMaiScheduleReader
 
 DOM_KKUPFL_PROJECTIONS_FILE = 'Dom_2023_2024_KKUPFL.xlsx'
@@ -16,6 +17,7 @@ DOM_PA_PROJECTIONS_FILE = 'Dom_2023_2024_Puckin_Around.xlsx'
 EP_PROJECTIONS_FILE = 'EP_202324.xlsx'
 KKUPFL_ADP_FILE = 'KKUPFL_2023_2024_Mock_ADP.xlsx'
 KKUPFL_SCORING_FILE = 'KKUPFL_2023_2024_Scoring.xlsx'
+NHL_PROJECTIONS_FILE = '23-24-nhl-com-projections.xlsx'
 STEVE_LAIDLAW_PROJECTIONS_FILE = 'Steve_Laidlaw_2023_24.xlsx'
 
 JEFF_MAI_SCHEDULE_READER = '23-24-NHL-Schedule-Jeff-Mai.xlsx'
@@ -29,7 +31,8 @@ def get_readers(league):
     readers = [
         KKUPFLAdpReader(KKUPFL_ADP_FILE),
         EliteProspectsReader(EP_PROJECTIONS_FILE),
-        SteveLaidlawReader(STEVE_LAIDLAW_PROJECTIONS_FILE)
+        SteveLaidlawReader(STEVE_LAIDLAW_PROJECTIONS_FILE),
+        NHLReader(NHL_PROJECTIONS_FILE)
     ]
     if league == league.KKUPFL:
         readers.extend([
