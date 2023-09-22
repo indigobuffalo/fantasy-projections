@@ -12,15 +12,15 @@ from reader.laidlaw import SteveLaidlawReader
 from reader.nhl import NHLReader
 from reader.schedule import JeffMaiScheduleReader
 
-DOM_KKUPFL_PROJECTIONS_FILE = 'Dom_2023_2024_KKUPFL.xlsx'
-DOM_PA_PROJECTIONS_FILE = 'Dom_2023_2024_Puckin_Around.xlsx'
-EP_PROJECTIONS_FILE = 'EP_202324.xlsx'
-KKUPFL_ADP_FILE = 'KKUPFL_2023_2024_Mock_ADP.xlsx'
-KKUPFL_SCORING_FILE = 'KKUPFL_2023_2024_Scoring.xlsx'
-NHL_PROJECTIONS_FILE = '23-24-nhl-com-projections.xlsx'
-STEVE_LAIDLAW_PROJECTIONS_FILE = 'Steve_Laidlaw_2023_24.xlsx'
+DOM_KKUPFL_PROJECTIONS_FILE = '23-24-Dom-KKUPFL.xlsx'
+DOM_PA_PROJECTIONS_FILE = '23-24-Dom-Puckin-Around.xlsx'
+EP_PROJECTIONS_FILE = '23-24-Elite-Prospects-Projections.xlsx'
+KKUPFL_ADP_FILE = '23-24-KKUPFL-Mock-ADP.xlsx'
+KKUPFL_SCORING_FILE = '23-24-KKUPFL-Scoring.xlsx'
+NHL_PROJECTIONS_FILE = '23-24-NHL-Dot-Com-projections.xlsx'
+STEVE_LAIDLAW_PROJECTIONS_FILE = '23-24-Steve-Laidlaw-Projections.xlsx'
 
-JEFF_MAI_SCHEDULE_READER = '23-24-NHL-Schedule-Jeff-Mai.xlsx'
+JEFF_MAI_SCHEDULE_READER = '23-24-Jeff-Mai-Schedule.xlsx'
 
 
 # https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue
@@ -48,7 +48,7 @@ def get_readers(league):
             DomReader(DOM_PA_PROJECTIONS_FILE, "puckin around", rank_col='/GP', ascending=False)
         ])
     # TODO: fix games per week
-    # readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER, sheet_name="Games per week"))
+    readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER, sheet_name="Games per week"))
     readers.append(JeffMaiScheduleReader(JEFF_MAI_SCHEDULE_READER))
     return readers
 
