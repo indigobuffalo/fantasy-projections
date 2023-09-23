@@ -3,6 +3,7 @@ from pathlib import Path
 
 from pandas import DataFrame
 
+from input.kkupfl import KKUPFL_DRAFTED
 from model.league import League
 from reader.base import FantasyBaseReader
 from reader.schedule import JeffMaiScheduleReader

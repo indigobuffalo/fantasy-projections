@@ -2,7 +2,7 @@ import argparse
 import warnings
 
 from controller import RankingsController, populate_average_rank, write_avg_ranks_to_csv
-from input import select_players
+from input.input import kkupfl_players, pa_players
 from model.league import League
 from reader.dom import DomReader
 from reader.ep import EliteProspectsReader
@@ -26,7 +26,16 @@ JEFF_MAI_SCHEDULE_READER = '23-24-Jeff-Mai-Schedule.xlsx'
 warnings.simplefilter("ignore")
 
 
-def get_readers(league, schedule=True):
+def get_players_list(league: League):
+    players = []
+    if league == league.KKUPFL:
+        players = kkupfl_players
+    elif league == league.PUCKIN_AROUND:
+        players = pa_players
+    return players
+
+
+def get_readers(league: League, schedule=True):
     readers = [
         KKUPFLAdpReader(KKUPFL_ADP_FILE),
         EliteProspectsReader(EP_PROJECTIONS_FILE),
@@ -64,6 +73,8 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
+    players = get_players_list(args.league)
+
     if args.write:
         controller = RankingsController(get_readers(args.league, schedule=False))
         controller.compare_players(aggregated_ranks, teams, ['.*'], write=True)
@@ -72,4 +83,4 @@ if __name__ == '__main__':
         write_avg_ranks_to_csv(args.league, sorted_players)
     else:
         controller = RankingsController(get_readers(args.league))
-        controller.compare_players(aggregated_ranks, teams, select_players)
+        controller.compare_players(aggregated_ranks, teams, players)
