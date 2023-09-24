@@ -53,4 +53,16 @@ KKUPFL_DRAFTED= [
     'Dylan Larkin',
     'Quinn Hughes',
     'Ryan Nugent-Hopkins',
+    'Connor Bedard',
+    'Filip Forsberg',
+    'Matt Boldy',
+    'Johnny Gaudreau',
+    'Cole Caufield',
+    'Victor Hedman',
+    'Evander Kane',
+    'Adrian Kempe',
+    'Carter Verhaeghe',
+    'Valeri Nichushkin'
+
+
 ]

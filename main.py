@@ -2,7 +2,7 @@ import argparse
 import warnings
 
 from controller import RankingsController, populate_average_rank, write_avg_ranks_to_csv
-from input.input import kkupfl_players, pa_players
+from input.select_players import kkupfl_players, pa_players
 from model.league import League
 from reader.dom import DomReader
 from reader.ep import EliteProspectsReader
