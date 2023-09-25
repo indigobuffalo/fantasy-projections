@@ -62,7 +62,14 @@ KKUPFL_DRAFTED= [
     'Evander Kane',
     'Adrian Kempe',
     'Carter Verhaeghe',
-    'Valeri Nichushkin'
+    'Valeri Nichushkin',
+    'Jesper Bratt',
+    'Brad Marchand',
+    'Moritz Seider',
+    'Travis Konecny',
+    'Mikhail Sergachev',
+    'Sam Reinhart',
+    'Brandon Montour',
 
 
 ]

@@ -46,4 +46,11 @@ PA_DRAFTED = [
     'Ryan Nugent-Hopkins',
     'Quinn Hughes',
     'Mikhail Sergachev',
+    'Alex Debrincat',
+    'Josh Morrissey',
+    'Dylan Larkin',
+    'Charlie Mcavoy',
+    'Alex Tuch',
+    'Jake Guentzel',
+    'Alex Pietrangelo',
 ]
