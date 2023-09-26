@@ -57,6 +57,7 @@ class JeffMaiScheduleReader(FantasyBaseReader):
     def jeff_mai_weeks_to_yahoo_weeks(df: DataFrame, columns: list):
         for c in columns:
             if isinstance(c, int):
+                # TODO: fix issue with footer column throwing this off
                 df.rename(columns={c: c-1}, inplace=True)
 
     def filter_primary_row(self, filter_regex: str):

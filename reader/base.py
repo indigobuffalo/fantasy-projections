@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import ipdb
 import pandas as pd
 from unidecode import unidecode
 
@@ -14,6 +13,8 @@ name_correction_map = {
     "JOEL ERIKSSON-EK": "Joel Eriksson Ek",
     "JT MILLER": "J.T. Miller",
     "MATTHEW BOLDY": "Matt Boldy",
+    "MATHEW BARZAL": "Matt Barzal",
+    "MAT BARZAL": "Matt Barzal",
     "MICHAEL MATHESON": "Mike Matheson",
     "MITCHELL MARNER": "Mitch Marner",
     "PHOENIX COPLEY": "Pheonix Copley",
