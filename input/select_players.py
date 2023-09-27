@@ -10,17 +10,12 @@ kkupfl_players = [
 ]
 
 pa_players = [
-    'Travis Konecny',
-    'Filip Forsberg',
-    'Bo Horvat',
     'Chris Kreider',
-    'Radko Gudas',
-    'Vincent Trocheck',
-    'Tanner Jeannot',
-    'Val.* Nichu',
-    'Pavel Buchn.*',
-    'Patrik Laine',
-    'Johnny Gaudreau',
-    'Seth Jones',
-
+    'Vla.* Taras',
+    'Trevor Zegras',
+    'Tom Wilson',
+    'Pierre-Luc Dubois',
+    'Artturi Lehkonen',
+    'Mark Stone',
+    'Taylor Hall',
 ]
