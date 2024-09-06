@@ -3,6 +3,7 @@ from pathlib import Path
 
 from pandas import DataFrame
 
+from config.config import FantasyConfig
 from input.drafted_kkupfl import KKUPFL_DRAFTED
 from model.league import League
 from reader.base import FantasyBaseReader
@@ -21,7 +22,7 @@ def populate_averaged_rankings(rankings: dict):
 
 
 def write_avg_ranks_to_csv(league: League, sorted_ranks: list):
-    outfile = OUTPUT_DIR / f"{league}_ranks.csv"
+    outfile = OUTPUT_DIR / FantasyConfig.season / f"{league}_ranks.csv"
     print(f"Writing results for {league} to {outfile}")
     with open(outfile, "w", newline="") as f:
         writer = csv.writer(f)
@@ -45,18 +46,24 @@ class RankingsController:
     def get_rows_matching_regexes(self, reader: FantasyBaseReader, regexes: list[str]):
         return reader.filter_by_regexes(regexes)
 
+    @staticmethod
     def register_to_averaged_rankings(reader: FantasyBaseReader, results: DataFrame, average_rankings: dict):
         for player_name in results[reader.primary_col]:
             reader.add_to_averaged_rankings(player_name, average_rankings)
 
-    def print_matches_for_reader(self, reader: FantasyBaseReader, results: DataFrame, avg_ranks: dict, name_regexes: list[str]):
-        reader.print(results)
+    def get_matches_for_all_readers(self, regexes) -> dict[FantasyBaseReader, DataFrame]:
+        '''
+        Searches all readers for rows matching the passed in regexes.
 
-    def print_matches_for_all_readers(self, name_regexes: list[str] = None, avg_ranks: dict = None, write: bool = False):
-        if name_regexes is None:
-            name_regexes = ['.*']
-        if avg_ranks is None:
-            avg_ranks = dict()
+        Returns a dictionary which maps each reader to its corresponding result set.
+        '''
+        if regexes is None:
+            regexes = ['.*']
+        reader_results = dict()
         for reader in self.readers:
-            results = self.get_rows_matching_regexes(reader, regexes=name_regexes)
-            self.print_matches_for_reader(reader, results, avg_ranks, name_regexes)
+            reader_results[reader] = self.get_rows_matching_regexes(reader, regexes=regexes)
+        return reader_results
+
+    def print_matches_for_all_readers(self, reader_results_map: dict[FantasyBaseReader, DataFrame]) -> None:
+        for reader, results in reader_results_map.items():
+            reader.print(results)

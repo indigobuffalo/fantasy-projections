@@ -4,8 +4,9 @@ import pandas as pd
 from pandas import DataFrame
 from unidecode import unidecode
 
+from exceptions import UnrecognizedPlayerError
 from model.rank import Rank
-from config import FantasyConfig
+from config.config import FantasyConfig
 
 PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
@@ -18,7 +19,8 @@ class FantasyBaseReader:
         self.primary_col = primary_col
         self.team_col = team_col
         self.weight = weight
-        self.df = pd.read_excel(PROJECTIONS_DIR / season / filename, sheet_name=sheet_name, index_col=None, header=header)
+        self.filename = PROJECTIONS_DIR / season / filename
+        self.df = pd.read_excel(self.filename, sheet_name=sheet_name, index_col=None, header=header)
         self.normalize()
 
     def __str__(self):
@@ -102,10 +104,13 @@ class FantasyBaseReader:
         else:
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
-    def add_to_average_rankings(self, name: str, rankings: dict):
+    def add_to_averaged_rankings(self, name: str, rankings: dict):
         player_df = self.filter_by_regex(name)
 
         player_rankings = player_df[self.rank_col]
+        if len(player_rankings.values) == 0:
+            raise UnrecognizedPlayerError(name, self.filename)
         rank = player_rankings.values[0]
+
         self.append_rank(name, rank, rankings)
         self.inc_weight_count(name, rankings)

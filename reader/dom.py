@@ -5,9 +5,9 @@ from reader.base import FantasyBaseReader
 
 class DomReader(FantasyBaseReader):
 
-    def __init__(self, filename: str, league: str, rank_col='RK', ascending=True):
+    def __init__(self, filename: str, rank_col='RK', ascending=True):
         super().__init__(
-            f"DOM {rank_col} ({league.upper()})",
+            f"DOM ({rank_col})",
             filename,
             primary_col="NAME",
             rank_col=rank_col,
