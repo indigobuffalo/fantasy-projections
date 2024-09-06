@@ -1,9 +1,11 @@
 import argparse
 import warnings
 
+from config import FantasyConfig
 from controller import RankingsController, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.select_players import KKUPFL_PLAYERS, PA_PLAYERS
 from model.league import League
+from reader.blake import BlakeRedditReader
 from reader.dom import DomReader
 from reader.ep import EliteProspectsReader
 from reader.kkupfl_adp import KKUPFLAdpReader
@@ -12,37 +14,31 @@ from reader.laidlaw import SteveLaidlawReader
 from reader.nhl import NHLReader
 from reader.schedule import JeffMaiScheduleReader
 
-DOM_KKUPFL_PROJECTIONS_FILE = 'Dom-KKUPFL.xlsx'
-# DOM_PA_PROJECTIONS_FILE = '23-24-Dom-Puckin-Around.xlsx'
-# EP_PROJECTIONS_FILE = '23-24-Elite-Prospects-Projections.xlsx'
-KKUPFL_ADP_FILE = 'KKUPFL-Mock-ADP.xlsx'
-KKUPFL_SCORING_FILE = 'KKUPFL-Scoring.xlsx'
-# NHL_PROJECTIONS_FILE = '23-24-NHL-Dot-Com-projections.xlsx'
-STEVE_LAIDLAW_PROJECTIONS_FILE = 'Steve-Laidlaw.xlsx'
-JEFF_MAI_SCHEDULE_READER = 'Jeff-Mai-Schedule.xlsx'
 
 BASE_READERS = [
-    KKUPFLAdpReader(KKUPFL_ADP_FILE),
+    KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP),
     # EliteProspectsReader(EP_PROJECTIONS_FILE),
-    SteveLaidlawReader(STEVE_LAIDLAW_PROJECTIONS_FILE),
+    SteveLaidlawReader(FantasyConfig.projection_files.STEVE_LAIDLAW),
     # NHLReader(NHL_PROJECTIONS_FILE)
 ]
 
 KKUPFL_READERS = [
-    DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl"),
-    DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False),
-    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202324"),
-    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202223"),
-    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202122"),
+    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL, "kkupfl"),
+    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_PA, "PA"), # TODO: REMOVE
+    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, "kkupfl"),
+    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, "kkupfl", rank_col='/GP', ascending=False),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
 ]
 
-PUCKIN_AROUND_READERS = [
-    DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl"),
-    DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False),
-    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202324"),
-    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202223"),
-    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202122"),
-]
+#PUCKIN_AROUND_READERS = [
+#    DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl"),
+#    DomReader(DOM_KKUPFL_PROJECTIONS_FILE, "kkupfl", rank_col='/GP', ascending=False),
+#    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202324"),
+#    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202223"),
+#    KKUPFLScoringReader(KKUPFL_SCORING_FILE, "202122"),
+#]
 
 
 # https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue

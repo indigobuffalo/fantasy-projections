@@ -5,12 +5,12 @@ from pandas import DataFrame
 from unidecode import unidecode
 
 from model.rank import Rank
-from config import Config
+from config import FantasyConfig
 
 PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
 class FantasyBaseReader:
-    def __init__(self, kind: str, filename, primary_col, rank_col, season=Config.SEASON, team_col=None,
+    def __init__(self, kind: str, filename, primary_col, rank_col, season=FantasyConfig.season, team_col=None,
                  weight=1, ascending=True, sheet_name=0, header=0):
         self.kind = kind
         self.ascending = ascending
@@ -27,7 +27,7 @@ class FantasyBaseReader:
     @staticmethod
     def normalize_spelling(name):
         upper = name.upper()
-        return Config.NORMALIZED_PLAYER_NAMES[upper] if upper in Config.NORMALIZED_PLAYER_NAMES else name
+        return FantasyConfig.normalized_player_names[upper] if upper in FantasyConfig.normalized_player_names else name
 
     @staticmethod
     def normalize_accents(name):

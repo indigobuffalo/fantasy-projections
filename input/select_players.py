@@ -1,5 +1,23 @@
 KKUPFL_PLAYERS = [
-    '.*J.*Miller.*',
+'Nugent-Hopkins',
+'Raymond',
+'McCann',
+'Sharangovich',
+'Lafreniere',
+'Skinner',
+'Laine',
+'Georgiev',
+'Vasilevskiy',
+'Carlson',
+'Doughty',
+'Hanifin',
+'Durzi',
+'Sanderson',
+'Thomas',
+'Kadri',
+'Scheifele',
+'Batherson',
+'Bobrovsky',
 ]
 
 PA_PLAYERS = [

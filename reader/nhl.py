@@ -14,7 +14,6 @@ class NHLReader(FantasyBaseReader):
             rank_col='Rank',
             sheet_name="Sheet 1"
         )
-        self.players_col = 'Player'
         self.weight = 75
 
     def filter_by_regex(self, filter_regex: str):

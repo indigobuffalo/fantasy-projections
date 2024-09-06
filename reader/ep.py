@@ -13,7 +13,6 @@ class EliteProspectsReader(FantasyBaseReader):
             rank_col=rank_col,
             team_col="Team",
         )
-        self.players_col = 'NAME'
         self.weight = 75
 
     def filter_by_regex(self, filter_regex: str):
