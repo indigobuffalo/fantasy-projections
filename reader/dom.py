@@ -18,8 +18,8 @@ class DomReader(FantasyBaseReader):
         self.players_col = 'NAME'
         self.weight = 700 if self.rank_col == 'RK' else 0  # don't weigh /GP rank
 
-    def filter_primary_row(self, filter_regex: str):
-        return super().filter_primary_row(filter_regex)[[
+    def filter_by_regex(self, filter_regex: str):
+        return super().filter_by_regex(filter_regex)[[
             self.rank_col,
             self.primary_col,
             'AGE',

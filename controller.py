@@ -11,7 +11,7 @@ from reader.schedule import JeffMaiScheduleReader
 OUTPUT_DIR = Path(__file__).parent / "output"
 
 
-def populate_average_rank(rankings: dict):
+def populate_averaged_rankings(rankings: dict):
     """{<player>: { "ranks": [R1, R2, ...], "count": len(ranks)}}"""
     for player in rankings:
         ranks = [r for r in rankings[player]['ranks']]
@@ -42,17 +42,21 @@ class RankingsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def run_reader(self, reader: FantasyBaseReader, avg_ranks: dict, teams: set, players: list[str], write=False):
-        if isinstance(reader, JeffMaiScheduleReader) and not write:
-            results = reader.filter_primary_rows(list(teams))
-        else:
-            results = reader.filter_primary_rows(players)
-            for p in results[reader.primary_col]:
-                reader.record_player_ranks(p, avg_ranks, teams)
-        if not write:
-            reader.print_header()
-            self.print_results(results)
+    def get_rows_matching_regexes(self, reader: FantasyBaseReader, regexes: list[str]):
+        return reader.filter_by_regexes(regexes)
 
-    def compare_players(self, avg_ranks: dict, teams: set, players: list[str], write=False):
+    def register_to_averaged_rankings(reader: FantasyBaseReader, results: DataFrame, average_rankings: dict):
+        for player_name in results[reader.primary_col]:
+            reader.add_to_averaged_rankings(player_name, average_rankings)
+
+    def print_matches_for_reader(self, reader: FantasyBaseReader, results: DataFrame, avg_ranks: dict, name_regexes: list[str]):
+        reader.print(results)
+
+    def print_matches_for_all_readers(self, name_regexes: list[str] = None, avg_ranks: dict = None, write: bool = False):
+        if name_regexes is None:
+            name_regexes = ['.*']
+        if avg_ranks is None:
+            avg_ranks = dict()
         for reader in self.readers:
-            self.run_reader(reader, avg_ranks, teams, players, write=write)
+            results = self.get_rows_matching_regexes(reader, regexes=name_regexes)
+            self.print_matches_for_reader(reader, results, avg_ranks, name_regexes)

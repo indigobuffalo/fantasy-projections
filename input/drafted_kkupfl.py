@@ -70,6 +70,4 @@ KKUPFL_DRAFTED= [
     'Mikhail Sergachev',
     'Sam Reinhart',
     'Brandon Montour',
-
-
 ]

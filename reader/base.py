@@ -1,30 +1,16 @@
 from pathlib import Path
 
 import pandas as pd
+from pandas import DataFrame
 from unidecode import unidecode
 
 from model.rank import Rank
+from config import Config
 
 PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
-name_correction_map = {
-    "ALEXANDER OVECHKIN": "Alex Ovechkin",
-    "FREDERIK ANDERSON": "Frederik Andersen",
-    "JOEL ERIKSSON-EK": "Joel Eriksson Ek",
-    "JT MILLER": "J.T. Miller",
-    "MATTHEW BOLDY": "Matt Boldy",
-    "MATHEW BARZAL": "Matt Barzal",
-    "MAT BARZAL": "Matt Barzal",
-    "MICHAEL MATHESON": "Mike Matheson",
-    "MITCHELL MARNER": "Mitch Marner",
-    "PHOENIX COPLEY": "Pheonix Copley",
-    "PILLIPP GRUBAUER": "Philipp Grubauer",
-    "VITEK VANICEK": "Vitek Vanecek"
-}
-
-
 class FantasyBaseReader:
-    def __init__(self, kind: str, filename, primary_col, rank_col, team_col=None,
+    def __init__(self, kind: str, filename, primary_col, rank_col, season=Config.SEASON, team_col=None,
                  weight=1, ascending=True, sheet_name=0, header=0):
         self.kind = kind
         self.ascending = ascending
@@ -32,7 +18,7 @@ class FantasyBaseReader:
         self.primary_col = primary_col
         self.team_col = team_col
         self.weight = weight
-        self.df = pd.read_excel(PROJECTIONS_DIR / filename, sheet_name=sheet_name, index_col=None, header=header)
+        self.df = pd.read_excel(PROJECTIONS_DIR / season / filename, sheet_name=sheet_name, index_col=None, header=header)
         self.normalize()
 
     def __str__(self):
@@ -41,7 +27,7 @@ class FantasyBaseReader:
     @staticmethod
     def normalize_spelling(name):
         upper = name.upper()
-        return name_correction_map[upper] if upper in name_correction_map else name
+        return Config.NORMALIZED_PLAYER_NAMES[upper] if upper in Config.NORMALIZED_PLAYER_NAMES else name
 
     @staticmethod
     def normalize_accents(name):
@@ -54,43 +40,52 @@ class FantasyBaseReader:
     def is_team_reader(self):
         return self.primary_col == "team"
 
-    def normalize(self):
-
-        def normalize_player_names(name):
-            if not isinstance(name, str):
-                return name
-            name = self.normalize_spelling(name)
-            name = self.normalize_accents(name)
-            name = self.normalize_capitalization(name)
+    @staticmethod
+    def normalize_team_names(name):
+        if not isinstance(name, str):
             return name
+        return name.upper()
 
-        def normalize_team_names(name):
-            if not isinstance(name, str):
-                return name
-            return name.upper()
+    def normalize_player_names(self, name):
+        if not isinstance(name, str):
+            return name
+        name = self.normalize_spelling(name)
+        name = self.normalize_accents(name)
+        name = self.normalize_capitalization(name)
+        return name
 
-        normalize_fn = normalize_team_names if self.is_team_reader() else normalize_player_names
-
-        self.df[self.primary_col] = self.df[self.primary_col].apply(normalize_fn)
+    def normalize(self):
+        if self.is_team_reader():
+            self.df[self.primary_col] = self.df[self.primary_col].apply(self.normalize_team_names)
+        else:
+            self.df[self.primary_col] = self.df[self.primary_col].apply(self.normalize_player_names)
 
     def print_header(self):
         chars = len(str(self))
         border = '=' * chars
         print(f"{border}\n{self}\n{border}")
 
-    def filter_primary_row(self, filter_regex: str):
+    def print(self, results: DataFrame):
+        '''
+        Print results for the current reader
+        '''
+        self.print_header()
+        print(f"({len(results)} players)")
+        print(results.to_string(index=False))
+
+    def filter_by_regex(self, filter_regex: str):
         """
         Get rows with primary column values that satisfy the passed regex filter
         """
         return self.df.loc[self.df[self.primary_col].str.contains(filter_regex, na=False, case=False)]
 
-    def filter_primary_rows(self, filter_regexes: list[str]):
+    def filter_by_regexes(self, filter_regexes: list[str]):
         """
         Get rows with primary column values that satisfy the passed regex filters
         """
         dataframes = list()
         for r in filter_regexes:
-            dataframes.append(self.filter_primary_row(r))
+            dataframes.append(self.filter_by_regex(r))
         res = pd.concat(dataframes)
         return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
 
@@ -102,19 +97,15 @@ class FantasyBaseReader:
             rankings[name]['count'] = 1
 
     def append_rank(self, name: str, rank: int, rankings: dict):
-        if rankings.get(name) and rankings[name].get('ranks'):
+        if name in rankings:
             rankings[name]['ranks'].append(Rank(name=name, rank=rank, source=str(self), weight=self.weight))
         else:
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
-    def record_player_ranks(self, name: str, rankings: dict, teams: set):
-        player = self.filter_primary_row(name)
-        if self.team_col:
-            if len(player[self.team_col].values) > 0:
-                teams.add(player[self.team_col].values[0])
-            else:
-                print(f"No team value for {self} {name}: {player}")
-        player_rankings = player[self.rank_col]
-        for rank in player_rankings.values:
-            self.append_rank(name, rank, rankings)
-            self.inc_weight_count(name, rankings)
+    def add_to_average_rankings(self, name: str, rankings: dict):
+        player_df = self.filter_by_regex(name)
+
+        player_rankings = player_df[self.rank_col]
+        rank = player_rankings.values[0]
+        self.append_rank(name, rank, rankings)
+        self.inc_weight_count(name, rankings)

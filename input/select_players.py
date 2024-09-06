@@ -1,15 +1,8 @@
-kkupfl_players = [
-    'Jared Mccan',
-    'Vincent Troc',
-    'Nick Schma',
-    'John Kling',
-    'Ja.* Sanderson',
-    'Filip Hronek',
-    'Tomas Hertl',
-    'Shayne Ghos',
+KKUPFL_PLAYERS = [
+    '.*J.*Miller.*',
 ]
 
-pa_players = [
+PA_PLAYERS = [
     'Chris Kreider',
     'Vla.* Taras',
     'Trevor Zegras',

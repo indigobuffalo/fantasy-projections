@@ -10,8 +10,8 @@ class KKUPFLScoringReader(FantasyBaseReader):
         self.players_col = 'Player Name'
         self.weight = 0
 
-    def filter_primary_row(self, filter_regex: str):
-        return super().filter_primary_row(filter_regex)[[
+    def filter_by_regex(self, filter_regex: str):
+        return super().filter_by_regex(filter_regex)[[
             self.rank_col,
             self.primary_col,
             'Team',
