@@ -5,11 +5,11 @@ from reader.base import FantasyBaseReader
 
 class EliteProspectsReader(FantasyBaseReader):
 
-    def __init__(self, filename: str, rank_col='Rank'):
+    def __init__(self, filename: str, rank_col='Points'):
         super().__init__(
             f"Elite Prospects {rank_col}",
             filename,
-            primary_col="Player",
+            primary_col="Name",
             rank_col=rank_col,
             team_col="Team",
         )
@@ -21,10 +21,7 @@ class EliteProspectsReader(FantasyBaseReader):
             self.primary_col,
             'Pos',
             'Team',
-            'GP',
-            'G',
-            'A',
-            'P',
-            'GP.1',
-            'W',
+            'Games',
+            'Goals',
+            'Assists'
         ]]

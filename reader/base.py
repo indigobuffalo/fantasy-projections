@@ -81,9 +81,11 @@ class FantasyBaseReader:
         """
         return self.df.loc[self.df[self.primary_col].str.contains(filter_regex, na=False, case=False)]
 
-    def filter_by_regexes(self, filter_regexes: list[str]):
+    def filter_by_regexes(self, filter_regexes: list[str]) -> DataFrame:
         """
         Get rows with primary column values that satisfy the passed regex filters
+
+        :returns: A DataFrame of matching results sorted by rank.
         """
         dataframes = list()
         for r in filter_regexes:

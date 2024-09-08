@@ -1,6 +1,8 @@
 import argparse
 import warnings
 
+from pandas import DataFrame
+
 from config.config import FantasyConfig
 from controller import RankingsController, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.player_rgxs import *
@@ -17,7 +19,7 @@ from reader.schedule import JeffMaiScheduleReader
 
 BASE_READERS = [
     KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP),
-    # EliteProspectsReader(EP_PROJECTIONS_FILE),
+    EliteProspectsReader(FantasyConfig.projection_files.ELITE_PROSPECTS),
     SteveLaidlawReader(FantasyConfig.projection_files.STEVE_LAIDLAW),
     # NHLReader(NHL_PROJECTIONS_FILE)
 ]
@@ -29,7 +31,6 @@ KKUPFL_READERS = [
     DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
     KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
     KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
 ]
 
 
@@ -38,7 +39,6 @@ PUCKIN_AROUND_READERS = [
    DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-   KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
 ]
 
 
@@ -46,9 +46,15 @@ PUCKIN_AROUND_READERS = [
 warnings.simplefilter("ignore")
 
 
-def get_player_rgxs(league: League):
+def _parse_cmd_line_regexes(cli_rgxs: str) -> list[str]:
+    return cli_rgxs.split(",")
+
+
+def get_player_rgxs(league: League, cli_rgxs = None) -> list[str]:
     players = []
-    if len(QUICK_COMPARE_PLAYERS) >= 1:
+    if cli_rgxs is not None:
+        players = _parse_cmd_line_regexes(cli_rgxs)
+    elif len(QUICK_COMPARE_PLAYERS) >= 1:
         players = QUICK_COMPARE_PLAYERS
     elif league == league.KKUPFL:
         players = KKUPFL_PLAYERS
@@ -98,20 +104,35 @@ def write_consolidated_rankings(controller: RankingsController, league: str, ave
     write_avg_ranks_to_csv(league, sorted_players)
 
 
+def _trim_results(results: DataFrame, count: int):
+    return results.head(count)
+
+
+def refine_results(results: DataFrame, count: int = -1) -> DataFrame:
+    if count > 0:
+        results = _trim_results(results, count)
+    return results
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--write', action='store_true', help='Write projections.')
-    parser.add_argument('-t', '--top', action='store_true', help='Show the top remaining rows in each ranking.  Defaults to top 10.')
-    parser.add_argument('count', metavar='N', type=int, nargs='?', default=10, help='Number of rows to return when "-t/--top" flag used.')
+    parser.add_argument('-c', '--count', dest='count', type=int, nargs='?', default=-1, help='Number of rows to return. If omitted, will return all matching rows.')
+    parser.add_argument('-r', '--regexes', dest='regexes', type=str, nargs='?', help='The player regexes to search upon.')
     parser.add_argument('league', type=League, choices=list(League), help='The league the projections are for')
 
     args = parser.parse_args()
     league = args.league
+    count = args.count
+    regexes = args.regexes
+
     controller = RankingsController(get_readers(league))
     averaged_rankings = dict()
 
     if args.write:
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     else:
-        reader_results = controller.get_matches_for_all_readers(get_player_rgxs(league))
-        controller.print_matches_for_all_readers(reader_results)
+        results_by_reader = controller.get_matches_for_all_readers(get_player_rgxs(league, cli_rgxs=regexes))
+        for rd, res in results_by_reader.items():
+            results_by_reader[rd] = refine_results(res, count=count)
+        controller.print_matches_for_all_readers(results_by_reader)

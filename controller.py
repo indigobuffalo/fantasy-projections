@@ -43,7 +43,7 @@ class RankingsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def get_rows_matching_regexes(self, reader: FantasyBaseReader, regexes: list[str]):
+    def get_rows_matching_regexes(self, reader: FantasyBaseReader, regexes: list[str]) -> DataFrame:
         return reader.filter_by_regexes(regexes)
 
     @staticmethod

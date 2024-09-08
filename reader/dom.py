@@ -29,6 +29,7 @@ class DomReader(FantasyBaseReader):
             'G',
             'A',
             'PTS',
+            'TOI',
             'SOG',
             'BLK',
             'HIT',
