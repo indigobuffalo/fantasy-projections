@@ -5,19 +5,22 @@ from reader.base import FantasyBaseReader
 
 class BlakeRedditReader(FantasyBaseReader):
 
-    def __init__(self, filename: str, rank_col='FPTS - Total', primary_col="Name"):
-        super().__init__(f"Blake", filename, primary_col=primary_col, rank_col=rank_col, sheet_name="Skaters Trimmed", ascending=False)
+    def __init__(self, filename: str, rank_col='Rank', primary_col="Name"):
+        super().__init__(f"Blake", filename, primary_col=primary_col, rank_col=rank_col, position_col='Pos', sheet_name="Skaters Trimmed")
         self.weight = 75
 
-    def filter_by_regex(self, filter_regex: str):
-        return super().filter_by_regex(filter_regex)[[
+    def find_by_rgx(self, filter_regex: str):
+        return super().find_by_rgx(filter_regex)[[
             self.rank_col,
             self.primary_col,
+            'Proj Pos',
+            self.position_col,
             'FPTS per GP',
-            'GP',
+            'PTS',
             'G',
             'A',
-            'PTS',
+            'GP',
+
             'PPP',
             'SOG',
             'HIT',

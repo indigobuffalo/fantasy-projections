@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+import re
 
 from pandas import DataFrame
 
@@ -43,8 +44,39 @@ class RankingsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def get_rows_matching_regexes(self, reader: FantasyBaseReader, regexes: list[str]) -> DataFrame:
-        return reader.filter_by_regexes(regexes)
+    @staticmethod
+    def get_matches(reader: FantasyBaseReader, regexes: list[str] = ['.*']) -> DataFrame:
+        matches = reader.find_by_rgxs(regexes)
+        return matches
+
+    @staticmethod
+    def _trim_results(results: DataFrame, count:str):
+        if count > 0:
+            return results.head(count)
+        return results
+
+    @staticmethod
+    def _filter_excluded_players(reader: FantasyBaseReader, results: DataFrame, excluded: list[str]) -> DataFrame:
+        if len(excluded) == 0:
+            return results
+
+        patternDel = "|".join(excluded)
+        filter = results[reader.primary_col].str.contains(patternDel, flags=re.IGNORECASE, regex=True)
+        return results[~filter]
+
+    @staticmethod
+    def _filter_positions(reader: FantasyBaseReader, results: DataFrame, positions_rgx) -> DataFrame:
+        if reader.position_col == 'N/A':
+            print(f"{reader.kind} reader does not support position filtering")
+            return results
+        filter = results[reader.position_col].str.contains(positions_rgx, flags=re.IGNORECASE, regex=True)
+        return results[filter]
+
+    def refine_results(self, reader: FantasyBaseReader, results: DataFrame, positions_rgx: list[str], excluded: list[str] = None, count: int = -1) -> DataFrame:
+        results = self._filter_positions(reader, results, positions_rgx)
+        results = self._filter_excluded_players(reader, results, excluded)
+        results = self._trim_results(results, count)
+        return results
 
     @staticmethod
     def register_to_averaged_rankings(reader: FantasyBaseReader, results: DataFrame, average_rankings: dict):
@@ -61,7 +93,7 @@ class RankingsController:
             regexes = ['.*']
         reader_results = dict()
         for reader in self.readers:
-            reader_results[reader] = self.get_rows_matching_regexes(reader, regexes=regexes)
+            reader_results[reader] = self.get_matches(reader, regexes=regexes)
         return reader_results
 
     def print_matches_for_all_readers(self, reader_results_map: dict[FantasyBaseReader, DataFrame]) -> None:

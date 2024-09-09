@@ -11,19 +11,20 @@ class DomReader(FantasyBaseReader):
             filename,
             primary_col="NAME",
             rank_col=rank_col,
+            position_col='POS',
             team_col="TEAM",
             ascending=ascending,
             sheet_name="The List"
         )
         self.weight = 700 if self.rank_col == 'RK' else 0  # don't weigh /GP rank
 
-    def filter_by_regex(self, filter_regex: str):
-        return super().filter_by_regex(filter_regex)[[
+    def find_by_rgx(self, filter_regex: str):
+        return super().find_by_rgx(filter_regex)[[
             self.rank_col,
             self.primary_col,
+            self.position_col,
             'AGE',
             'TEAM',
-            'POS',
             'FP',
             'GP',
             'G',

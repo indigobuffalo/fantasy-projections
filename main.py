@@ -6,6 +6,8 @@ from pandas import DataFrame
 from config.config import FantasyConfig
 from controller import RankingsController, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.player_rgxs import *
+from input.drafted_kkupfl import KKUPFL_DRAFTED
+from input.drafted_pa import PA_DRAFTED
 from model.league import League
 from reader.blake import BlakeRedditReader
 from reader.dom import DomReader
@@ -60,8 +62,30 @@ def get_player_rgxs(league: League, cli_rgxs = None) -> list[str]:
         players = KKUPFL_PLAYERS
     elif league == league.PUCKIN_AROUND:
         players = PA_PLAYERS
+
+    if len(players) == 0:
+        players = [".*"]
+
     return players
 
+
+def expand_position_rgx(pos_rgx: str) -> str:
+    pos_rgx = pos_rgx.upper()
+    if pos_rgx == "F":
+        return "C|LW|RW"
+    if pos_rgx == "SKT":
+        return "C|LW|RW|D"
+    return pos_rgx
+
+
+def get_position_regex(cli_positions: str) -> str:
+    if cli_positions is None:
+        return ".*"
+
+    positions = cli_positions.split(",")
+    positions_rgx = "|".join([ expand_position_rgx(p) for p in positions ])
+    return positions_rgx
+    
 
 def get_readers(league: League):
     '''
@@ -76,42 +100,33 @@ def get_readers(league: League):
     return readers
 
 
-def get_players_matching_regexes(controller: RankingsController, league: str):
-    '''
-    Gets prints all player rows matching the defined player regexes.
-    '''
-    name_regexes = get_player_rgxs(league)
-    controller.print_matches_for_all_readers(name_regexes)
-
-
-def print_players_matching_regexes(controller: RankingsController, league: str):
-    '''
-    Finds and prints all player rows matching the defined player regexes.
-    '''
-    name_regexes = get_player_rgxs(league)
-    controller.print_matches_for_all_readers(name_regexes)
-
-
 def write_consolidated_rankings(controller: RankingsController, league: str, averaged_rankings: dict):
     '''
     Generates a final consolidated and weighted average rankings list and writes it to a file.
     '''
     for reader in controller.readers:
-        results = controller.get_rows_matching_regexes(reader, ['.*'])
+        results = controller.get_matches(reader)
         controller.register_to_averaged_rankings(reader, results, averaged_rankings)
     populate_averaged_rankings(averaged_rankings)
     sorted_players = sorted(averaged_rankings.items(), key=lambda item: item[1]['avg_rk'])
     write_avg_ranks_to_csv(league, sorted_players)
 
 
-def _trim_results(results: DataFrame, count: int):
-    return results.head(count)
+def get_excluded_for_league(league: str) -> list[str]:
+    """Get list of players to exclude from results
 
+    Args:
+        league (str): Fantasy league
 
-def refine_results(results: DataFrame, count: int = -1) -> DataFrame:
-    if count > 0:
-        results = _trim_results(results, count)
-    return results
+    Returns:
+        list[str]: List of players to exclude
+    """
+    excluded = list()
+    if league == League.KKUPFL:
+        excluded = KKUPFL_DRAFTED
+    elif league == League.PUCKIN_AROUND:
+        excluded = PA_DRAFTED
+    return excluded
 
 
 if __name__ == '__main__':
@@ -119,12 +134,15 @@ if __name__ == '__main__':
     parser.add_argument('-w', '--write', action='store_true', help='Write projections.')
     parser.add_argument('-c', '--count', dest='count', type=int, nargs='?', default=-1, help='Number of rows to return. If omitted, will return all matching rows.')
     parser.add_argument('-r', '--regexes', dest='regexes', type=str, nargs='?', help='The player regexes to search upon.')
+    parser.add_argument('-p', '--position', dest='positions', type=str, nargs='?', help='The positions to filter upon.')
     parser.add_argument('league', type=League, choices=list(League), help='The league the projections are for')
 
     args = parser.parse_args()
     league = args.league
     count = args.count
-    regexes = args.regexes
+    regexes = get_player_rgxs(league, args.regexes)
+    excluded = get_excluded_for_league(league)
+    positions_rgx = get_position_regex(args.positions)
 
     controller = RankingsController(get_readers(league))
     averaged_rankings = dict()
@@ -132,7 +150,7 @@ if __name__ == '__main__':
     if args.write:
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     else:
-        results_by_reader = controller.get_matches_for_all_readers(get_player_rgxs(league, cli_rgxs=regexes))
+        results_by_reader = controller.get_matches_for_all_readers(regexes)
         for rd, res in results_by_reader.items():
-            results_by_reader[rd] = refine_results(res, count=count)
+            results_by_reader[rd] = controller.refine_results(rd, res, positions_rgx=positions_rgx, excluded=excluded, count=count)
         controller.print_matches_for_all_readers(results_by_reader)

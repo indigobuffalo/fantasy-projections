@@ -11,12 +11,25 @@ from config.config import FantasyConfig
 PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
 
 class FantasyBaseReader:
-    def __init__(self, kind: str, filename, primary_col, rank_col, season=FantasyConfig.season, team_col=None,
-                 weight=1, ascending=True, sheet_name=0, header=0):
+    def __init__(
+        self, 
+        kind: str, 
+        filename, 
+        primary_col, 
+        rank_col, 
+        position_col,
+        season=FantasyConfig.season, 
+        team_col=None,
+        weight=1, 
+        ascending=True, 
+        sheet_name=0, 
+        header=0
+    ):
         self.kind = kind
         self.ascending = ascending
         self.rank_col = rank_col
         self.primary_col = primary_col
+        self.position_col = position_col
         self.team_col = team_col
         self.weight = weight
         self.filename = PROJECTIONS_DIR / season / filename
@@ -75,21 +88,32 @@ class FantasyBaseReader:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def filter_by_regex(self, filter_regex: str):
-        """
-        Get rows with primary column values that satisfy the passed regex filter
+    def filter_by_rgx():
+        pass
+
+    def find_by_rgx(self, filter_regex: str) -> DataFrame:
+        """Get rows with primary column values that satisfy the passed regex filter
+
+        Args:
+            filter_regex (str): The regex to filter the primary_column on.
+
+        Returns:
+            DataFrame: The matching row(s) from the source dataframe.
         """
         return self.df.loc[self.df[self.primary_col].str.contains(filter_regex, na=False, case=False)]
 
-    def filter_by_regexes(self, filter_regexes: list[str]) -> DataFrame:
-        """
-        Get rows with primary column values that satisfy the passed regex filters
+    def find_by_rgxs(self, filter_regexes: list[str]) -> DataFrame:
+        """Get rows with primary column values that satisfy the passed regex filters
 
-        :returns: A DataFrame of matching results sorted by rank.
+        Args:
+            filter_regexes (list[str]): List of regexes to filter upon.
+
+        Returns:
+            DataFrame: Matching results, sorted by rank.
         """
         dataframes = list()
         for r in filter_regexes:
-            dataframes.append(self.filter_by_regex(r))
+            dataframes.append(self.find_by_rgx(r))
         res = pd.concat(dataframes)
         return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
 
@@ -107,7 +131,7 @@ class FantasyBaseReader:
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
     def add_to_averaged_rankings(self, name: str, rankings: dict):
-        player_df = self.filter_by_regex(name)
+        player_df = self.find_by_rgx(name)
 
         player_rankings = player_df[self.rank_col]
         if len(player_rankings.values) == 0:

@@ -5,22 +5,24 @@ from reader.base import FantasyBaseReader
 
 class EliteProspectsReader(FantasyBaseReader):
 
-    def __init__(self, filename: str, rank_col='Points'):
+    def __init__(self, filename: str, rank_col='Rank'):
         super().__init__(
             f"Elite Prospects {rank_col}",
             filename,
             primary_col="Name",
             rank_col=rank_col,
-            team_col="Team",
+            position_col='Pos',
+            team_col="Team"
         )
         self.weight = 75
 
-    def filter_by_regex(self, filter_regex: str):
-        return super().filter_by_regex(filter_regex)[[
+    def find_by_rgx(self, filter_regex: str):
+        return super().find_by_rgx(filter_regex)[[
             self.rank_col,
             self.primary_col,
-            'Pos',
+            self.position_col,
             'Team',
+            'Points',
             'Games',
             'Goals',
             'Assists'
