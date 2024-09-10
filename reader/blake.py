@@ -1,12 +1,13 @@
 import pandas as pd
 
+from model.kind import ReaderKind
 from reader.base import FantasyBaseReader
 
 
 class BlakeRedditReader(FantasyBaseReader):
 
     def __init__(self, filename: str, rank_col='Rank', primary_col="Name"):
-        super().__init__(f"Blake", filename, primary_col=primary_col, rank_col=rank_col, position_col='Pos', sheet_name="Skaters Trimmed")
+        super().__init__(ReaderKind.PROJECTION, filename, primary_col=primary_col, rank_col=rank_col, position_col='Pos', sheet_name="Skaters Trimmed")
         self.weight = 75
 
     def find_by_rgx(self, filter_regex: str):

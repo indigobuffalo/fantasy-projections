@@ -37,7 +37,7 @@ class FantasyBaseReader:
         self.normalize()
 
     def __str__(self):
-        return self.kind
+        return self.filename.stem
 
     @staticmethod
     def normalize_spelling(name):

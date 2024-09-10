@@ -1,13 +1,13 @@
 import pandas as pd
 
+from model.kind import ReaderKind
 from reader.base import FantasyBaseReader
 
 
 class KKUPFLAdpReader(FantasyBaseReader):
 
     def __init__(self, filename: str):
-        super().__init__("KKUPFL ADP", filename, primary_col='Player', rank_col='Full MOCK ADP ', position_col='POS')
-        self.adp_col = 'Mock ADP'
+        super().__init__(ReaderKind.ADP, filename, primary_col='Player', rank_col='Full MOCK ADP ', position_col='POS')
         self.weight = 75
 
     def find_by_rgx(self, filter_regex: str):

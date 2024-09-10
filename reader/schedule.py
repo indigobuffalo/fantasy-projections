@@ -4,6 +4,7 @@ import numpy
 import pandas as pd
 from pandas import DataFrame
 
+from model.kind import ReaderKind
 from reader.base import FantasyBaseReader
 
 
@@ -26,7 +27,7 @@ class JeffMaiScheduleReader(FantasyBaseReader):
             sheet_name: str = "Off night games per week"
     ):
         super().__init__(
-            f"Jeff Mai Schedule ({sheet_name})",
+            ReaderKind.SCHEDULE,
             filename,
             primary_col="team",
             rank_col=rank_col,

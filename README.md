@@ -69,7 +69,6 @@ Steve Laidlaw
 
 ```
 
-
 ## Projection Sources
 
 - KKUPFL ADP: (KKUPFL Discord channel)

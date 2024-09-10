@@ -18,7 +18,6 @@ from reader.laidlaw import SteveLaidlawReader
 from reader.nhl import NHLReader
 from reader.schedule import JeffMaiScheduleReader
 
-
 BASE_READERS = [
     KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP),
     EliteProspectsReader(FantasyConfig.projection_files.ELITE_PROSPECTS),
@@ -26,23 +25,24 @@ BASE_READERS = [
     # NHLReader(NHL_PROJECTIONS_FILE)
 ]
 
-
 KKUPFL_READERS = [
     BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL),
     DomReader(FantasyConfig.projection_files.DOM_KKUPFL),
-    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
+    DomReader(FantasyConfig.projection_files.DOM_KKUPFL,
+              rank_col='/GP',
+              ascending=False),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING,
+                        "202324"),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING,
+                        "202223"),
+]
+
+PUCKIN_AROUND_READERS = [
+    DomReader(FantasyConfig.projection_files.DOM_PA),
+    DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
     KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
     KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
 ]
-
-
-PUCKIN_AROUND_READERS = [
-   DomReader(FantasyConfig.projection_files.DOM_PA),
-   DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
-   KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-   KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-]
-
 
 # https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue
 warnings.simplefilter("ignore")
@@ -52,7 +52,7 @@ def _parse_cmd_line_regexes(cli_rgxs: str) -> list[str]:
     return cli_rgxs.split(",")
 
 
-def get_player_rgxs(league: League, cli_rgxs = None) -> list[str]:
+def get_player_rgxs(league: League, cli_rgxs=None) -> list[str]:
     players = []
     if cli_rgxs is not None:
         players = _parse_cmd_line_regexes(cli_rgxs)
@@ -83,9 +83,9 @@ def get_position_regex(cli_positions: str) -> str:
         return ".*"
 
     positions = cli_positions.split(",")
-    positions_rgx = "|".join([ expand_position_rgx(p) for p in positions ])
+    positions_rgx = "|".join([expand_position_rgx(p) for p in positions])
     return positions_rgx
-    
+
 
 def get_readers(league: League):
     '''
@@ -100,15 +100,18 @@ def get_readers(league: League):
     return readers
 
 
-def write_consolidated_rankings(controller: RankingsController, league: str, averaged_rankings: dict):
+def write_consolidated_rankings(controller: RankingsController, league: str,
+                                averaged_rankings: dict):
     '''
     Generates a final consolidated and weighted average rankings list and writes it to a file.
     '''
     for reader in controller.readers:
         results = controller.get_matches(reader)
-        controller.register_to_averaged_rankings(reader, results, averaged_rankings)
+        controller.register_to_averaged_rankings(reader, results,
+                                                 averaged_rankings)
     populate_averaged_rankings(averaged_rankings)
-    sorted_players = sorted(averaged_rankings.items(), key=lambda item: item[1]['avg_rk'])
+    sorted_players = sorted(averaged_rankings.items(),
+                            key=lambda item: item[1]['avg_rk'])
     write_avg_ranks_to_csv(league, sorted_players)
 
 
@@ -150,7 +153,17 @@ if __name__ == '__main__':
     if args.write:
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     else:
-        results_by_reader = controller.get_matches_for_all_readers(regexes)
-        for rd, res in results_by_reader.items():
-            results_by_reader[rd] = controller.refine_results(rd, res, positions_rgx=positions_rgx, excluded=excluded, count=count)
+        results_by_reader = controller.get_matches_for_projection_readers(regexes)
+
+        matched_players = set()
+        for reader, results in results_by_reader.items():
+            results_by_reader[reader] = controller.refine_results(
+                reader,
+                results,
+                positions_rgx=positions_rgx,
+                excluded=excluded,
+                count=count)
+            matched_players.update(results_by_reader[reader][reader.primary_col].tolist())
+        # controller.get_matches_for_historic_readers("|".join(matched_players))
+        # import ipdb;ipdb.set_trace()
         controller.print_matches_for_all_readers(results_by_reader)

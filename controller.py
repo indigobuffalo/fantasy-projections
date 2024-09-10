@@ -67,7 +67,7 @@ class RankingsController:
     @staticmethod
     def _filter_positions(reader: FantasyBaseReader, results: DataFrame, positions_rgx) -> DataFrame:
         if reader.position_col == 'N/A':
-            print(f"{reader.kind} reader does not support position filtering")
+            print(f"{reader} reader does not support position filtering")
             return results
         filter = results[reader.position_col].str.contains(positions_rgx, flags=re.IGNORECASE, regex=True)
         return results[filter]
@@ -83,7 +83,7 @@ class RankingsController:
         for player_name in results[reader.primary_col]:
             reader.add_to_averaged_rankings(player_name, average_rankings)
 
-    def get_matches_for_all_readers(self, regexes) -> dict[FantasyBaseReader, DataFrame]:
+    def get_matches_for_projection_readers(self, regexes) -> dict[FantasyBaseReader, DataFrame]:
         '''
         Searches all readers for rows matching the passed in regexes.
 
@@ -95,6 +95,9 @@ class RankingsController:
         for reader in self.readers:
             reader_results[reader] = self.get_matches(reader, regexes=regexes)
         return reader_results
+
+    def get_matches_for_historic_readers(self):
+        pass
 
     def print_matches_for_all_readers(self, reader_results_map: dict[FantasyBaseReader, DataFrame]) -> None:
         for reader, results in reader_results_map.items():

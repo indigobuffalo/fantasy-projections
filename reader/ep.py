@@ -1,5 +1,6 @@
 import pandas as pd
 
+from model.kind import ReaderKind
 from reader.base import FantasyBaseReader
 
 
@@ -7,7 +8,7 @@ class EliteProspectsReader(FantasyBaseReader):
 
     def __init__(self, filename: str, rank_col='Rank'):
         super().__init__(
-            f"Elite Prospects {rank_col}",
+            ReaderKind.PROJECTION,
             filename,
             primary_col="Name",
             rank_col=rank_col,

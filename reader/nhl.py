@@ -1,5 +1,6 @@
 import pandas as pd
 
+from model.kind import ReaderKind
 from reader.base import FantasyBaseReader
 
 
@@ -8,7 +9,7 @@ class NHLReader(FantasyBaseReader):
 
     def __init__(self, filename: str):
         super().__init__(
-            f"NHL.com (Points)",
+            ReaderKind.PROJECTION,
             filename,
             primary_col="Player",
             rank_col='Rank',
