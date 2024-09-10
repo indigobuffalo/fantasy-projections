@@ -1,5 +1,6 @@
 import argparse
 import warnings
+from pprint import pprint
 
 from pandas import DataFrame
 
@@ -8,7 +9,9 @@ from controller import RankingsController, populate_averaged_rankings, write_avg
 from input.player_rgxs import *
 from input.drafted_kkupfl import KKUPFL_DRAFTED
 from input.drafted_pa import PA_DRAFTED
+from model.kind import ReaderKind
 from model.league import League
+from reader.base import FantasyBaseReader
 from reader.blake import BlakeRedditReader
 from reader.dom import DomReader
 from reader.ep import EliteProspectsReader
@@ -28,13 +31,9 @@ BASE_READERS = [
 KKUPFL_READERS = [
     BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL),
     DomReader(FantasyConfig.projection_files.DOM_KKUPFL),
-    DomReader(FantasyConfig.projection_files.DOM_KKUPFL,
-              rank_col='/GP',
-              ascending=False),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING,
-                        "202324"),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING,
-                        "202223"),
+    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
+    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
 ]
 
 PUCKIN_AROUND_READERS = [
@@ -79,6 +78,8 @@ def expand_position_rgx(pos_rgx: str) -> str:
 
 
 def get_position_regex(cli_positions: str) -> str:
+    if len(QUICK_COMPARE_PLAYERS) > 0:  # quick compares override any position filters
+        return '.*'
     if cli_positions is None:
         return ".*"
 
@@ -87,7 +88,7 @@ def get_position_regex(cli_positions: str) -> str:
     return positions_rgx
 
 
-def get_readers(league: League):
+def get_readers(league: League) -> list[FantasyBaseReader]:
     '''
     Creates a list of readers appropriate for the given league.
     All readers extend BaseReader.
@@ -125,7 +126,9 @@ def get_excluded_for_league(league: str) -> list[str]:
         list[str]: List of players to exclude
     """
     excluded = list()
-    if league == League.KKUPFL:
+    if len(QUICK_COMPARE_PLAYERS) > 0:  # quick compares override any exclusions
+        return excluded
+    elif league == League.KKUPFL:
         excluded = KKUPFL_DRAFTED
     elif league == League.PUCKIN_AROUND:
         excluded = PA_DRAFTED
@@ -147,23 +150,31 @@ if __name__ == '__main__':
     excluded = get_excluded_for_league(league)
     positions_rgx = get_position_regex(args.positions)
 
-    controller = RankingsController(get_readers(league))
     averaged_rankings = dict()
 
     if args.write:
+        controller = RankingsController(get_readers(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     else:
-        results_by_reader = controller.get_matches_for_projection_readers(regexes)
-
+        projections_controller = RankingsController(readers=[r for r in get_readers(league) if r.kind == ReaderKind.PROJECTION])
+        projections_by_reader = projections_controller.get_matches_for_readers(regexes)
         matched_players = set()
-        for reader, results in results_by_reader.items():
-            results_by_reader[reader] = controller.refine_results(
+        for reader, results in projections_by_reader.items():
+            projections_by_reader[reader] = projections_controller.refine_results(
                 reader,
                 results,
                 positions_rgx=positions_rgx,
                 excluded=excluded,
                 count=count)
-            matched_players.update(results_by_reader[reader][reader.primary_col].tolist())
-        # controller.get_matches_for_historic_readers("|".join(matched_players))
-        # import ipdb;ipdb.set_trace()
-        controller.print_matches_for_all_readers(results_by_reader)
+            matched_players.update(projections_by_reader[reader][reader.primary_col].tolist())
+
+        historical_controller = RankingsController(readers=[r for r in get_readers(league) if r.kind == ReaderKind.HISTORICAL])
+        historical_stats_by_reader = historical_controller.get_matches_for_readers(matched_players)
+
+        projections_controller.print_matches_for_all_readers(projections_by_reader)
+        historical_controller.print_matches_for_all_readers(historical_stats_by_reader)
+        print("==================")
+        print("SLEEPERS (shhhhhh)")
+        print("==================")
+        pprint(SLEEPERS)
+        print()

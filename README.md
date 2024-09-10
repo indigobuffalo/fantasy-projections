@@ -78,7 +78,8 @@ Steve Laidlaw
 
 ## TODOs
 
-- Make the historic points reader display set of players matched by all other readers
+- Make the historic points reader display last 3 years plus average
+  - Pandas probs has a good way to do this - https://stackoverflow.com/a/25058102 ?
 - Refactor to move logic out of main.py and into controller
   - Consider service layer between controller and readers (DAOs)
 - Scripts

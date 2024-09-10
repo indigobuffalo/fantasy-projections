@@ -44,7 +44,7 @@ KKUPFL_DRAFTED = [
     'Clayton Keller',
     'Adrian Kempe',
     'Sebastian Aho',
-    'Mathew Barzal',
+    'Matt Barzal',
     'Dylan Larkin',
     'Andrei Svechnikov',
     "Steven Stamkos",
