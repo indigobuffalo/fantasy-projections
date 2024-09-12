@@ -99,3 +99,14 @@ class RankingsController:
     def print_matches_for_all_readers(self, reader_results_map: dict[FantasyBaseReader, DataFrame]) -> None:
         for reader, results in reader_results_map.items():
             reader.print(results)
+
+    def get_top_players_for_readers(self):
+        '''
+        Searches all readers for rows matching the passed in regexes.
+
+        Returns a dictionary which maps each reader to its corresponding result set.
+        '''
+        reader_results = dict()
+        for reader in self.readers:
+            reader_results[reader] = self.get_matches(reader, regexes=['.*'])
+        return reader_results
