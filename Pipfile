@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+pandas = "*"
+unidecode = "*"
+openpyxl = "*"
+
+[dev-packages]
+ipdb = "*"
+yapf = "*"
+
+[requires]
+python_version = "3.12"

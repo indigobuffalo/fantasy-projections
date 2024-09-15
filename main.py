@@ -5,43 +5,43 @@ from pprint import pprint
 from pandas import DataFrame
 
 from config.config import FantasyConfig
-from controller import RankingsController, populate_averaged_rankings, write_avg_ranks_to_csv
+from service.projections import ProjectionsSvc, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.player_rgxs import *
 from input.drafted_kkupfl import KKUPFL_DRAFTED
 from input.drafted_pa import PA_DRAFTED
 from model.kind import ReaderKind
 from model.league import League
 from model.rank import Rank
-from reader.base import FantasyBaseReader
-from reader.blake import BlakeRedditReader
-from reader.dom import DomReader
-from reader.ep import EliteProspectsReader
-from reader.kkupfl_adp import KKUPFLAdpReader
-from reader.kkupfl_scoring import KKUPFLScoringReader
-from reader.laidlaw import SteveLaidlawReader
-from reader.nhl import NHLReader
-from reader.schedule import JeffMaiScheduleReader
+from dao.base import FantasyBaseDao
+from dao.blake import BlakeRedditDao
+from dao.dom import DomDao
+from dao.ep import EliteProspectsDao
+from dao.kkupfl_adp import KKUPFLAdpDao
+from dao.kkupfl_scoring import KKUPFLScoringDao
+from dao.laidlaw import SteveLaidlawDao
+from dao.nhl import NHLDao
+from dao.schedule import JeffMaiScheduleDao
 
 BASE_READERS = [
-    KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP),
-    EliteProspectsReader(FantasyConfig.projection_files.ELITE_PROSPECTS),
-    SteveLaidlawReader(FantasyConfig.projection_files.STEVE_LAIDLAW),
-    # NHLReader(NHL_PROJECTIONS_FILE)
+    KKUPFLAdpDao(FantasyConfig.projection_files.KKUPFL_ADP),
+    EliteProspectsDao(FantasyConfig.projection_files.ELITE_PROSPECTS),
+    SteveLaidlawDao(FantasyConfig.projection_files.STEVE_LAIDLAW),
 ]
 
 KKUPFL_READERS = [
-    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL),
-    DomReader(FantasyConfig.projection_files.DOM_KKUPFL),
-    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
+    BlakeRedditDao(FantasyConfig.projection_files.BLAKE_KKUPFL),
+    DomDao(FantasyConfig.projection_files.DOM_KKUPFL),
+    DomDao(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
+    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
+    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
+    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
 ]
 
 PUCKIN_AROUND_READERS = [
-    DomReader(FantasyConfig.projection_files.DOM_PA),
-    DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
+    DomDao(FantasyConfig.projection_files.DOM_PA),
+    DomDao(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
+    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
+    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
 ]
 
 # https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue
@@ -109,7 +109,7 @@ def get_position_regex(cli_positions: str) -> str:
     return positions_rgx
 
 
-def get_readers(league: League) -> list[FantasyBaseReader]:
+def get_readers(league: League) -> list[FantasyBaseDao]:
     '''
     Creates a list of readers appropriate for the given league.
     All readers extend BaseReader.
@@ -122,7 +122,7 @@ def get_readers(league: League) -> list[FantasyBaseReader]:
     return readers
 
 
-def write_consolidated_rankings(controller: RankingsController, league: str,
+def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
                                 averaged_rankings: dict):
     '''
     Generates a final consolidated and weighted average rankings list and writes it to a file.
@@ -137,7 +137,7 @@ def write_consolidated_rankings(controller: RankingsController, league: str,
     write_avg_ranks_to_csv(league, sorted_players)
 
 
-def get_projections_by_regexes(proj_controller: RankingsController, historical_controller: RankingsController, regexes: list[str]) -> dict[FantasyBaseReader, DataFrame]:
+def get_projections_by_regexes(proj_controller: ProjectionsSvc, historical_controller: ProjectionsSvc, regexes: list[str]) -> dict[FantasyBaseDao, DataFrame]:
     matched_players = set()
     projections_by_reader = proj_controller.get_matches_for_readers(regexes)
     for reader, results in projections_by_reader.items():
@@ -173,12 +173,12 @@ if __name__ == '__main__':
     averaged_rankings = dict()
 
     if args.write:
-        # write_consolidated_rankings()
-        controller = RankingsController(get_readers(league))
+        # write_consolidated_rankings(league, final_rankings)
+        controller = ProjectionsSvc(get_readers(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     else:
-        projections_controller = RankingsController(readers=[r for r in get_readers(league) if r.kind == ReaderKind.PROJECTION])
-        historical_controller = RankingsController(readers=[r for r in get_readers(league) if r.kind == ReaderKind.HISTORICAL])
+        projections_controller = ProjectionsSvc(readers=[r for r in get_readers(league) if r.kind == ReaderKind.PROJECTION])
+        historical_controller = ProjectionsSvc(readers=[r for r in get_readers(league) if r.kind == ReaderKind.HISTORICAL])
         projections = get_projections_by_regexes(projections_controller, historical_controller, regexes)
 
         projections_controller.print_matches_for_all_readers(projections)
