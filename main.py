@@ -4,6 +4,7 @@ from pprint import pprint
 
 from pandas import DataFrame
 
+from controller.projections import ProjectionsController
 from service.projections import ProjectionsSvc, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.player_rgxs import *
 from input.drafted_kkupfl import KKUPFL_DRAFTED
@@ -16,45 +17,6 @@ from model.rank import Rank
 warnings.simplefilter("ignore")
 
 
-def _parse_cmd_line_regexes(cli_rgxs: str) -> list[str]:
-    return cli_rgxs.split(",")
-
-
-def get_player_rgxs(league: League, cli_rgxs: str= None, top: bool = False) -> list[str]:
-    players = ['.*']
-    if cli_rgxs is not None:
-        players = _parse_cmd_line_regexes(cli_rgxs)
-    elif top:
-        return players
-    elif len(QUICK_COMPARE_PLAYERS) >= 1:
-        players = QUICK_COMPARE_PLAYERS
-    elif league == league.KKUPFL:
-        players = KKUPFL_PLAYERS
-    elif league == league.PUCKIN_AROUND:
-        players = PA_PLAYERS
-
-    return players
-
-
-def get_excluded_for_league(league: str, cli_rgxs: str = None) -> list[str]:
-    """Get list of players to exclude from results
-
-    Args:
-        league (str): Fantasy league
-
-    Returns:
-        list[str]: List of players to exclude
-    """
-    excluded = list()
-    if cli_rgxs is not None:
-        return excluded
-    elif QUICK_COMPARE_PLAYERS:  # quick compares override any exclusions
-        return excluded
-    elif league == League.KKUPFL:
-        excluded = KKUPFL_DRAFTED
-    elif league == League.PUCKIN_AROUND:
-        excluded = PA_DRAFTED
-    return excluded
 
 
 def expand_position_rgx(pos_rgx: str) -> str:
@@ -76,20 +38,6 @@ def get_position_regex(cli_positions: str) -> str:
     positions_rgx = "|".join([expand_position_rgx(p) for p in positions])
     return positions_rgx
 
-
-def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
-                                averaged_rankings: dict):
-    '''
-    Generates a final consolidated and weighted average rankings list and writes it to a file.
-    '''
-    for reader in controller.readers:
-        results = controller.get_matches(reader)
-        controller.register_to_averaged_rankings(reader, results,
-                                                 averaged_rankings)
-    populate_averaged_rankings(averaged_rankings)
-    sorted_players = sorted(averaged_rankings.items(),
-                            key=lambda item: item[1]['avg_rk'])
-    write_avg_ranks_to_csv(league, sorted_players)
 
 
 def get_projections_by_regexes(proj_controller: ProjectionsSvc, historical_controller: ProjectionsSvc, regexes: list[str]) -> dict[FantasyBaseDao, DataFrame]:
@@ -127,10 +75,14 @@ if __name__ == '__main__':
 
     averaged_rankings = dict()
 
+    controller = ProjectionsController(args.league)
+
     if args.write:
         # write_consolidated_rankings(league, final_rankings)
         controller = ProjectionsSvc(get_readers(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
+    elif args.top:
+        controller.get_top_rankings()
     else:
         projections_controller = ProjectionsSvc(readers=[r for r in get_readers(league) if r.kind == ReaderKind.PROJECTION])
         historical_controller = ProjectionsSvc(readers=[r for r in get_readers(league) if r.kind == ReaderKind.HISTORICAL])

@@ -36,6 +36,46 @@ PUCKIN_AROUND_DAOS = [
     KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
 ]
 
+
+def get_excluded_for_league(league: str, cli_rgxs: str = None) -> list[str]:
+    """Get list of players to exclude from results
+
+    Args:
+        league (str): Fantasy league
+
+    Returns:
+        list[str]: List of players to exclude
+    """
+    excluded = list()
+    if cli_rgxs is not None:
+        return excluded
+    elif QUICK_COMPARE_PLAYERS:  # quick compares override any exclusions
+        return excluded
+    elif league == League.KKUPFL:
+        excluded = KKUPFL_DRAFTED
+    elif league == League.PUCKIN_AROUND:
+        excluded = PA_DRAFTED
+    return excluded
+def _parse_cmd_line_regexes(cli_rgxs: str) -> list[str]:
+    return cli_rgxs.split(",")
+
+
+def get_player_rgxs(league: League, cli_rgxs: str= None, top: bool = False) -> list[str]:
+    players = ['.*']
+    if cli_rgxs is not None:
+        players = _parse_cmd_line_regexes(cli_rgxs)
+    elif top:
+        return players
+    elif len(QUICK_COMPARE_PLAYERS) >= 1:
+        players = QUICK_COMPARE_PLAYERS
+    elif league == league.KKUPFL:
+        players = KKUPFL_PLAYERS
+    elif league == league.PUCKIN_AROUND:
+        players = PA_PLAYERS
+
+    return players
+
+
 def get_daos(league: League) -> list[FantasyBaseDao]:
     '''
     Creates a list of readers appropriate for the given league.
@@ -49,6 +89,21 @@ def get_daos(league: League) -> list[FantasyBaseDao]:
     return readers
 
 
+def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
+                                averaged_rankings: dict):
+    '''
+    Generates a final consolidated and weighted average rankings list and writes it to a file.
+    '''
+    for reader in controller.readers:
+        results = controller.get_matches(reader)
+        controller.register_to_averaged_rankings(reader, results,
+                                                 averaged_rankings)
+    populate_averaged_rankings(averaged_rankings)
+    sorted_players = sorted(averaged_rankings.items(),
+                            key=lambda item: item[1]['avg_rk'])
+    write_avg_ranks_to_csv(league, sorted_players)
+
+
 class ProjectionsController:
     def __init__(self, league: str):
         self.league = get_daos(league)
@@ -57,3 +112,6 @@ class ProjectionsController:
     def write_consolidated_rankings(league: str, final_rankings: dict):
         controller = ProjectionsSvc(get_daos(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
+    
+    def get_top_rankings():
+        pass
