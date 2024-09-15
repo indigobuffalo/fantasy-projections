@@ -4,45 +4,13 @@ from pprint import pprint
 
 from pandas import DataFrame
 
-from config.config import FantasyConfig
 from service.projections import ProjectionsSvc, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.player_rgxs import *
 from input.drafted_kkupfl import KKUPFL_DRAFTED
 from input.drafted_pa import PA_DRAFTED
 from model.kind import ReaderKind
-from model.league import League
 from model.rank import Rank
-from dao.base import FantasyBaseDao
-from dao.blake import BlakeRedditDao
-from dao.dom import DomDao
-from dao.ep import EliteProspectsDao
-from dao.kkupfl_adp import KKUPFLAdpDao
-from dao.kkupfl_scoring import KKUPFLScoringDao
-from dao.laidlaw import SteveLaidlawDao
-from dao.nhl import NHLDao
-from dao.schedule import JeffMaiScheduleDao
 
-BASE_READERS = [
-    KKUPFLAdpDao(FantasyConfig.projection_files.KKUPFL_ADP),
-    EliteProspectsDao(FantasyConfig.projection_files.ELITE_PROSPECTS),
-    SteveLaidlawDao(FantasyConfig.projection_files.STEVE_LAIDLAW),
-]
-
-KKUPFL_READERS = [
-    BlakeRedditDao(FantasyConfig.projection_files.BLAKE_KKUPFL),
-    DomDao(FantasyConfig.projection_files.DOM_KKUPFL),
-    DomDao(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
-    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
-]
-
-PUCKIN_AROUND_READERS = [
-    DomDao(FantasyConfig.projection_files.DOM_PA),
-    DomDao(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
-    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-    KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-]
 
 # https://stackoverflow.com/questions/54976991/python-openpyxl-userwarning-unknown-extension-issue
 warnings.simplefilter("ignore")
@@ -107,19 +75,6 @@ def get_position_regex(cli_positions: str) -> str:
     positions = cli_positions.split(",")
     positions_rgx = "|".join([expand_position_rgx(p) for p in positions])
     return positions_rgx
-
-
-def get_readers(league: League) -> list[FantasyBaseDao]:
-    '''
-    Creates a list of readers appropriate for the given league.
-    All readers extend BaseReader.
-    '''
-    readers = BASE_READERS
-    if league == league.KKUPFL:
-        readers.extend(KKUPFL_READERS)
-    elif league == league.PUCKIN_AROUND:
-        readers.extend(PUCKIN_AROUND_READERS)
-    return readers
 
 
 def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
