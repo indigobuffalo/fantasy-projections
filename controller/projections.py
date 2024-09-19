@@ -6,9 +6,11 @@ from dao.ep import EliteProspectsDao
 from dao.kkupfl_adp import KKUPFLAdpDao
 from dao.kkupfl_scoring import KKUPFLScoringDao
 from dao.laidlaw import SteveLaidlawDao
+from pandas import DataFrame
 # from dao.nhl import NHLDao
 # from dao.schedule import JeffMaiScheduleDao
 from model.league import League
+from service.projection.base import get_excluded
 from service.projections import ProjectionsSvc
 
 
@@ -36,26 +38,24 @@ PUCKIN_AROUND_DAOS = [
     KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
 ]
 
+def get_projections_by_regexes(proj_controller: ProjectionsSvc, historical_controller: ProjectionsSvc, regexes: list[str]) -> dict[FantasyBaseDao, DataFrame]:
+    matched_players = set()
+    projections_by_reader = proj_controller.get_matches_for_readers(regexes)
+    for reader, results in projections_by_reader.items():
+        projections_by_reader[reader] = proj_controller.refine_results(
+            reader,
+            results,
+            positions_rgx=positions_rgx,
+            excluded=excluded,
+            count=count)
+        matched_players.update(projections_by_reader[reader][reader.primary_col].tolist())
 
-def get_excluded_for_league(league: str, cli_rgxs: str = None) -> list[str]:
-    """Get list of players to exclude from results
+    historical_stats_by_reader = historical_controller.get_matches_for_readers(matched_players)
+    return projections_by_reader | historical_stats_by_reader
 
-    Args:
-        league (str): Fantasy league
 
-    Returns:
-        list[str]: List of players to exclude
-    """
-    excluded = list()
-    if cli_rgxs is not None:
-        return excluded
-    elif QUICK_COMPARE_PLAYERS:  # quick compares override any exclusions
-        return excluded
-    elif league == League.KKUPFL:
-        excluded = KKUPFL_DRAFTED
-    elif league == League.PUCKIN_AROUND:
-        excluded = PA_DRAFTED
-    return excluded
+
+
 def _parse_cmd_line_regexes(cli_rgxs: str) -> list[str]:
     return cli_rgxs.split(",")
 
@@ -105,13 +105,32 @@ def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
 
 
 class ProjectionsController:
-    def __init__(self, league: str):
-        self.league = get_daos(league)
-    
+    def __init__(self, league: str = None):
+        self.league = League[league] if league is not None else None
     
     def write_consolidated_rankings(league: str, final_rankings: dict):
         controller = ProjectionsSvc(get_daos(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     
-    def get_top_rankings():
+    def get_excluded_for_league(self, league: str, cli_rgxs: str = None) -> list[str]:
+        """Get list of players to exclude from results
+    
+        Args:
+            league (str): Fantasy league
+    
+        Returns:
+            list[str]: List of players to exclude
+        """
+        excluded = list()
+        if cli_rgxs is not None:
+            excluded = _parse_cmd_line_regexes(cli_rgxs)
+        elif self.league == League.KKUPFL:
+            excluded = KKUPFL_DRAFTED
+        elif self.league == League.PUCKIN_AROUND:
+            excluded = PA_DRAFTED
+        return excluded
+    
+    def print_top_rankings(league: str, count: int, excluded: str) -> None:
+        excluded = get_excluded(league=league, cli_rgxs=excluded)
+
         pass
