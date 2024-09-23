@@ -1,3 +1,4 @@
+from ast import Tuple
 from config.config import FantasyConfig
 from dao.base import FantasyBaseDao
 from dao.blake import BlakeRedditDao
@@ -9,6 +10,8 @@ from dao.laidlaw import SteveLaidlawDao
 from pandas import DataFrame
 # from dao.nhl import NHLDao
 # from dao.schedule import JeffMaiScheduleDao
+from input.drafted_kkupfl import KKUPFL_DRAFTED
+from input.drafted_pa import PA_DRAFTED
 from model.league import League
 from service.projection.base import get_excluded
 from service.projections import ProjectionsSvc
@@ -54,28 +57,6 @@ def get_projections_by_regexes(proj_controller: ProjectionsSvc, historical_contr
     return projections_by_reader | historical_stats_by_reader
 
 
-
-
-def _parse_cmd_line_regexes(cli_rgxs: str) -> list[str]:
-    return cli_rgxs.split(",")
-
-
-def get_player_rgxs(league: League, cli_rgxs: str= None, top: bool = False) -> list[str]:
-    players = ['.*']
-    if cli_rgxs is not None:
-        players = _parse_cmd_line_regexes(cli_rgxs)
-    elif top:
-        return players
-    elif len(QUICK_COMPARE_PLAYERS) >= 1:
-        players = QUICK_COMPARE_PLAYERS
-    elif league == league.KKUPFL:
-        players = KKUPFL_PLAYERS
-    elif league == league.PUCKIN_AROUND:
-        players = PA_PLAYERS
-
-    return players
-
-
 def get_daos(league: League) -> list[FantasyBaseDao]:
     '''
     Creates a list of readers appropriate for the given league.
@@ -112,25 +93,44 @@ class ProjectionsController:
         controller = ProjectionsSvc(get_daos(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     
-    def get_excluded_for_league(self, league: str, cli_rgxs: str = None) -> list[str]:
-        """Get list of players to exclude from results
+    def get_excluded(self, player_rgxs: str = None) -> list[str]:
+        """Get list of comma-delimited player regexes to exclude from results
     
         Args:
-            league (str): Fantasy league
+            player_rgxs (str): Comma-delimited player regexes
     
         Returns:
             list[str]: List of players to exclude
         """
         excluded = list()
-        if cli_rgxs is not None:
-            excluded = _parse_cmd_line_regexes(cli_rgxs)
-        elif self.league == League.KKUPFL:
-            excluded = KKUPFL_DRAFTED
+        if player_rgxs is not None:
+            excluded.extend(player_rgxs.split(","))
+
+        if self.league == League.KKUPFL:
+            excluded.extend(KKUPFL_DRAFTED)
         elif self.league == League.PUCKIN_AROUND:
-            excluded = PA_DRAFTED
+            excluded.extend(PA_DRAFTED)
+
         return excluded
     
-    def print_top_rankings(league: str, count: int, excluded: str) -> None:
-        excluded = get_excluded(league=league, cli_rgxs=excluded)
+    def get_player_rgxs(league: League, cli_rgxs: str= None, top: bool = False) -> list[str]:
+        players = ['.*']
+        if cli_rgxs is not None:
+            players = cli_rgxs.split(",")
+        elif top:
+            return players
+        elif len(QUICK_COMPARE_PLAYERS) >= 1:
+            players = QUICK_COMPARE_PLAYERS
+        elif league == league.KKUPFL:
+            players = KKUPFL_PLAYERS
+        elif league == league.PUCKIN_AROUND:
+            players = PA_PLAYERS
+
+        return players
+
+    def get_top_rankings(self, count: int, cli_excluded: str) -> Tuple[str, int]:
+        excluded = self.get_excluded(player_rgxs=cli_excluded)
+        included = get_player_rgxs
+
 
         pass
