@@ -186,5 +186,5 @@ if __name__ == '__main__':
         print("==================")
         print("SLEEPERS (shhhhhh)")
         print("==================")
-        pprint([ x for x in SLEEPERS if x not in KKUPFL_DRAFTED ])
+        pprint([ x for x in SLEEPERS if x not in KKUPFL_DRAFTED])
         print()
