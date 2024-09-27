@@ -91,7 +91,7 @@ def get_excluded_for_league(league: str, cli_rgxs: str = None) -> list[str]:
 
 def expand_position_rgx(pos_rgx: str) -> str:
     pos_rgx = pos_rgx.upper()
-    if pos_rgx == "F":
+    if pos_rgx in ["F", "FWD"]:
         return "C|LW|RW"
     if pos_rgx == "SKT":
         return "C|LW|RW|D"
@@ -186,5 +186,5 @@ if __name__ == '__main__':
         print("==================")
         print("SLEEPERS (shhhhhh)")
         print("==================")
-        pprint([ x for x in SLEEPERS if x not in KKUPFL_DRAFTED])
+        pprint([ x for x in SLEEPERS if x not in PA_DRAFTED])
         print()
