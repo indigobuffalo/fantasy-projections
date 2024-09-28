@@ -4,7 +4,7 @@ from pprint import pprint
 
 from pandas import DataFrame
 
-from controller.projections import ProjectionsController
+from controller.base import ProjectionsController
 from service.projections import ProjectionsSvc, populate_averaged_rankings, write_avg_ranks_to_csv
 from input.common import *
 from input.drafted_kkupfl import KKUPFL_DRAFTED
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         # controller = ProjectionsSvc(get_readers(league))
         # write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     if args.top:
-        rankings, count = controller.get_top_rankings(count=count, cli_excluded=excluded)
+        rankings, count = controller.get_top_rankings(count=count, cli_exclude=excluded)
         print_results(rankings, count)
     # else:
         # projections_controller = ProjectionsSvc(readers=[r for r in get_readers(league) if r.kind == ReaderKind.PROJECTION])

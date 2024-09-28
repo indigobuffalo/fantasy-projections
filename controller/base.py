@@ -12,8 +12,10 @@ from pandas import DataFrame
 # from dao.schedule import JeffMaiScheduleDao
 from input.drafted_kkupfl import KKUPFL_DRAFTED
 from input.drafted_pa import PA_DRAFTED
+from input.filters import PLAYERS_TO_COMPARE
 from model.league import League
 from service.projection.base import get_excluded
+from service.projection.pa import PAProjectionSvc
 from service.projections import ProjectionsSvc
 
 
@@ -40,6 +42,13 @@ PUCKIN_AROUND_DAOS = [
     KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
     KKUPFLScoringDao(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
 ]
+
+
+LEAGUE_SVC_MAP = {
+    League.KKUPFL: KkupflProjectionService,
+    League.PUCKIN_AROUND: PAProjectionSvc
+}
+
 
 def get_projections_by_regexes(proj_controller: ProjectionsSvc, historical_controller: ProjectionsSvc, regexes: list[str]) -> dict[FantasyBaseDao, DataFrame]:
     matched_players = set()
@@ -86,14 +95,19 @@ def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
 
 
 class ProjectionsController:
-    def __init__(self, league: str = None):
-        self.league = League[league] if league is not None else None
+    def __init__(
+        self, 
+        league: str, 
+        count: int = -1
+    ):
+        self.league = League[league]
+        self.count = count
     
     def write_consolidated_rankings(league: str, final_rankings: dict):
         controller = ProjectionsSvc(get_daos(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     
-    def get_excluded(self, player_rgxs: str = None) -> list[str]:
+    def get_exclude_rgxs(self, player_rgxs: str = None) -> list[str]:
         """Get list of comma-delimited player regexes to exclude from results
     
         Args:
@@ -113,24 +127,16 @@ class ProjectionsController:
 
         return excluded
     
-    def get_player_rgxs(league: League, cli_rgxs: str= None, top: bool = False) -> list[str]:
-        players = ['.*']
-        if cli_rgxs is not None:
-            players = cli_rgxs.split(",")
+    def get_include_rgxs(rgxs: str = None, top: bool = False) -> list[str]:
+        if rgxs is not None:
+            return rgxs.split(",")
         elif top:
-            return players
-        elif len(QUICK_COMPARE_PLAYERS) >= 1:
-            players = QUICK_COMPARE_PLAYERS
-        elif league == league.KKUPFL:
-            players = KKUPFL_PLAYERS
-        elif league == league.PUCKIN_AROUND:
-            players = PA_PLAYERS
+            return ['.*']
+        else:
+            return PLAYERS_TO_COMPARE
 
-        return players
-
-    def get_top_rankings(self, count: int, cli_excluded: str) -> Tuple[str, int]:
-        excluded = self.get_excluded(player_rgxs=cli_excluded)
-        included = get_player_rgxs
-
-
+    def get_top_rankings(self, cli_include: str, cli_exclude: str) -> Tuple[str, int]:
+        excluded = self.get_exclude_rgxs(player_rgxs=cli_exclude)
+        included = self.get_include_rgxs(cli_include, self.count > 0)
+        # pass 
         pass

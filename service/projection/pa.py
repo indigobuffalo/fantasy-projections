@@ -1,0 +1,2 @@
+class PAProjectionSvc:
+    pass
