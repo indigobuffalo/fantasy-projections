@@ -8,9 +8,9 @@ from exceptions import UnrecognizedPlayerError
 from model.rank import Rank
 from config.config import FantasyConfig
 
-PROJECTIONS_DIR = Path(__file__).parent.parent / "projections"
+PROJECTIONS_DIR = Path(__file__).parent.parent.parent / "data" / "projections"
 
-class FantasyBaseDao:
+class BaseProjectionsReader:
     def __init__(
         self, 
         kind: str, 

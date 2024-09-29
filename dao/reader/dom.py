@@ -1,10 +1,10 @@
 import pandas as pd
 
+from dao.reader.base import BaseProjectionsReader
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
 
 
-class DomDao(FantasyBaseDao):
+class DomReader(BaseProjectionsReader):
 
     def __init__(self, filename: str, rank_col='RK', ascending=True):
         super().__init__(

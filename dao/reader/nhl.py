@@ -1,10 +1,10 @@
 import pandas as pd
 
+from dao.reader.base import BaseProjectionsReader
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
 
 
-class NHLDao(FantasyBaseDao):
+class NHLReader(BaseProjectionsReader):
     """Projections from nhl.com"""
 
     def __init__(self, filename: str):

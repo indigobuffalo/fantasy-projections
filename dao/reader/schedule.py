@@ -1,14 +1,14 @@
 from datetime import datetime
 
+from dao.reader.base import BaseProjectionsReader
 import numpy
 import pandas as pd
 from pandas import DataFrame
 
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
 
 
-class JeffMaiScheduleDao(FantasyBaseDao):
+class JeffMaiScheduleReader(BaseProjectionsReader):
     """
     Reader for schedule created by Jeff Mai:
       https://docs.google.com/spreadsheets/d/1kze7d9SfT7xEQQLHCkgPIpyNqxhnxfSpSw_H2p_vdmw/edit#gid=1251157188

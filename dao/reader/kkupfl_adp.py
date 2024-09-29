@@ -1,10 +1,10 @@
 import pandas as pd
 
+from dao.reader.base import BaseProjectionsReader
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
 
 
-class KKUPFLAdpDao(FantasyBaseDao):
+class KKUPFLAdpReader(BaseProjectionsReader):
 
     def __init__(self, filename: str):
         super().__init__(ReaderKind.PROJECTION, filename, primary_col='Player', rank_col='Full MOCK ADP ', position_col='POS')

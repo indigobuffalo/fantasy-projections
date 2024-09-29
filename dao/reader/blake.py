@@ -1,10 +1,10 @@
 import pandas as pd
 
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
+from dao.reader.base import BaseProjectionsReader
 
 
-class BlakeRedditDao(FantasyBaseDao):
+class BlakeRedditReader(BaseProjectionsReader):
 
     def __init__(self, filename: str, rank_col='Rank', primary_col="Name"):
         super().__init__(ReaderKind.PROJECTION, filename, primary_col=primary_col, rank_col=rank_col, position_col='Pos', sheet_name="Skaters Trimmed")

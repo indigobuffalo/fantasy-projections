@@ -1,10 +1,10 @@
 import pandas as pd
 
+from dao.reader.base import BaseProjectionsReader
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
 
 
-class KKUPFLScoringDao(FantasyBaseDao):
+class KKUPFLScoringReader(BaseProjectionsReader):
 
     def __init__(self, filename: str, sheet_name: str, ascending=False):
         self.sheet_name = sheet_name

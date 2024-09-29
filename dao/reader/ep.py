@@ -1,10 +1,10 @@
 import pandas as pd
 
+from dao.reader.base import BaseProjectionsReader
 from model.kind import ReaderKind
-from dao.base import FantasyBaseDao
 
 
-class EliteProspectsDao(FantasyBaseDao):
+class EliteProspectsReader(BaseProjectionsReader):
 
     def __init__(self, filename: str, rank_col='Rank'):
         super().__init__(
