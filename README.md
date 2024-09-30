@@ -57,6 +57,7 @@ KKUPFL ADP
 
 ## TODOs
 
+- Scrub excel column names before putting them in.  This would be simplify the code as less normalization needed.
 - Make the historic points reader display last 3 years plus average
   - Pandas probs has a good way to do this - https://stackoverflow.com/a/25058102 ?
 - Refactor to move logic out of main.py and into controller

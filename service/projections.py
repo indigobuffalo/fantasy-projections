@@ -1,11 +1,12 @@
 import csv
 import re
 from pathlib import Path
-from typing import Tuple
+from telnetlib import DO
+from typing import Tuple, Union
 
 from pandas import DataFrame
 
-from config.config import FantasyConfig
+from config.config import FantasyConfig as FC
 from dao.reader.base import BaseProjectionsReader
 from dao.reader.nhl import NHLReader
 from data.dynamic.drafted import KKUPFL_DRAFTED, PA_DRAFTED
@@ -24,24 +25,6 @@ from dao.reader import (
 OUTPUT_DIR = Path(__file__).parent / "output"
 
 
-
-#KKUPFL_READERS = [
-#    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL),
-#    DomReader(FantasyConfig.projection_files.DOM_KKUPFL),
-#    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
-#    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-#    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-#    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
-#]
-
-
-#PUCKIN_AROUND_READERS = [
-#    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_PA),
-#    DomReader(FantasyConfig.projection_files.DOM_PA),
-#    DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
-#]
-
-
 def populate_averaged_rankings(rankings: dict):
     """{<player>: { "ranks": [R1, R2, ...], "count": len(ranks)}}"""
     for player in rankings:
@@ -52,7 +35,7 @@ def populate_averaged_rankings(rankings: dict):
 
 
 def write_avg_ranks_to_csv(league: League, sorted_ranks: list):
-    outfile = OUTPUT_DIR / FantasyConfig.season / f"{league}_ranks.csv"
+    outfile = OUTPUT_DIR / FC.season / f"{league}_ranks.csv"
     print(f"Writing results for {league} to {outfile}")
     with open(outfile, "w", newline="") as f:
         writer = csv.writer(f)
@@ -94,18 +77,40 @@ def write_avg_ranks_to_csv(league: League, sorted_ranks: list):
 #                            key=lambda item: item[1]['avg_rk'])
 #    write_avg_ranks_to_csv(league, sorted_players)
 
-
 class ProjectionsSvc:
     def __init__(self, league: League, season: Season):
         self.league = league
         self.season = season
-        base_readers = [
-            KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP, self.season) if self.season in KKUPFLAdpReader.seasons else None,
-            EliteProspectsReader(FantasyConfig.projection_files.ELITE_PROSPECTS, self.season) if self.season in EliteProspectsReader.seasons else None,
-            SteveLaidlawReader(FantasyConfig.projection_files.STEVE_LAIDLAW, self.season) if self.season in SteveLaidlawReader.seasons else None,
-            NHLReader(FantasyConfig.projection_files.NHL, self.season) if self.season in NHLReader.seasons else None,
+
+        maybe_base_readers = [
+            self.maybe_load_reader(KKUPFLAdpReader, FC.projection_files.KKUPFL_ADP),
+            self.maybe_load_reader(EliteProspectsReader, FC.projection_files.ELITE_PROSPECTS),
+            self.maybe_load_reader(SteveLaidlawReader, FC.projection_files.STEVE_LAIDLAW),
+            self.maybe_load_reader(NHLReader, FC.projection_files.NHL),
         ]
-        self.base_readers = [r for r in base_readers if r is not None]
+
+        # TODO: way to use enum directly as keys instead of using value?
+        maybe_readers_by_league = {
+            League.KKUPFL.value: [
+                self.maybe_load_reader(BlakeRedditReader, FC.projection_files.BLAKE_KKUPFL),
+                self.maybe_load_reader(DomReader, FC.projection_files.DOM_KKUPFL),
+                self.maybe_load_reader(DomReader, FC.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
+                self.maybe_load_reader(KKUPFLScoringReader, FC.projection_files.KKUPFL_SCORING, sheet_name="202324"),
+                self.maybe_load_reader(KKUPFLScoringReader, FC.projection_files.KKUPFL_SCORING, sheet_name="202223"),
+                self.maybe_load_reader(KKUPFLScoringReader, FC.projection_files.KKUPFL_SCORING, sheet_name="202122"),
+            ],
+            League.PUCKIN_AROUND.value: [
+                self.maybe_load_reader(BlakeRedditReader, FC.projection_files.BLAKE_PA),
+                self.maybe_load_reader(DomReader, FC.projection_files.DOM_PA),
+                self.maybe_load_reader(DomReader, FC.projection_files.DOM_PA, rank_col='/GP', ascending=False),
+            ]
+        }
+        self.readers = [r for r in maybe_base_readers + maybe_readers_by_league[self.league.value] if r is not None]
+
+
+    def maybe_load_reader(self, reader: BaseProjectionsReader, filename: str, **kwargs) -> Union[None, BaseProjectionsReader]:
+        '''Conditionally instantiates passed in BaseProjectionReader if it supports the current season'''
+        return reader(filename, self.season, **kwargs) if self.season in reader.seasons else None
 
 #    @staticmethod
 #    def print_results(results: DataFrame):
@@ -152,22 +157,6 @@ class ProjectionsSvc:
             reader.add_to_averaged_rankings(player_name, average_rankings)
 
     
-    def get_readers(self) -> list[BaseProjectionsReader]:
-        '''
-        Gets a list of readers for the service.
-        
-        If the readers param is present, use it to determine which readers to use.
-        If not, default to the readers associated with the given league.
-        '''
-        readers = self.base_readers
-        import ipdb; ipdb.set_trace()
-#        if self.league == League.KKUPFL:
-#            self.base_readers.extend(KKUPFL_READERS)
-#        elif self.league == League.PUCKIN_AROUND:
-#            self.base_readers.extend(PUCKIN_AROUND_READERS)
-        return readers
-
-
     def get_matches_for_readers(self, regexes: list[str]) -> dict[BaseProjectionsReader, DataFrame]:
         '''
         Searches all readers for rows matching the passed in regexes.

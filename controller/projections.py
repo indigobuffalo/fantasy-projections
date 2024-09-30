@@ -78,6 +78,5 @@ class ProjectionsController:
         included = self.get_include_rgxs(cli_include, self.count > 0)
         print(f"Excluded: {excluded}")
         print(f"Included: {included}")
-        self.service.get_readers()
         import ipdb; ipdb.set_trace()
         pass
