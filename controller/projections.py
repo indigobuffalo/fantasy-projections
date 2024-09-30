@@ -4,6 +4,7 @@ from pandas import DataFrame
 from data.dynamic.drafted import KKUPFL_DRAFTED, PA_DRAFTED
 from data.dynamic.filters import PLAYERS_TO_COMPARE
 from model.league import League
+from model.season import Season
 from service.projections import ProjectionsSvc
 
 
@@ -31,10 +32,13 @@ class ProjectionsController:
     def __init__(
         self, 
         league: str, 
+        season: str,
         count: int = -1
     ):
         self.league = League(league)
+        self.season = Season(season)
         self.count = count
+        self.service = ProjectionsSvc(self.league, self.season)
     
     def write_consolidated_rankings(league: str, final_rankings: dict):
         controller = ProjectionsSvc(get_daos(league))
@@ -74,5 +78,6 @@ class ProjectionsController:
         included = self.get_include_rgxs(cli_include, self.count > 0)
         print(f"Excluded: {excluded}")
         print(f"Included: {included}")
+        self.service.get_readers()
         import ipdb; ipdb.set_trace()
         pass

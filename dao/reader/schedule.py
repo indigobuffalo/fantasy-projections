@@ -6,6 +6,7 @@ import pandas as pd
 from pandas import DataFrame
 
 from model.kind import ReaderKind
+from model.season import Season
 
 
 class JeffMaiScheduleReader(BaseProjectionsReader):
@@ -19,16 +20,22 @@ class JeffMaiScheduleReader(BaseProjectionsReader):
       JEFF MAI: Week 24, 25 and 26
     """
 
+    seasons = [
+        Season.SEASON_2023_2024, 
+    ]
+
     def __init__(
             self,
             filename: str,
+            season: Season,
             rank_col: str = 'Grand Total',
             ascending: bool = False,
             sheet_name: str = "Off night games per week"
     ):
         super().__init__(
-            ReaderKind.SCHEDULE,
-            filename,
+            kind=ReaderKind.SCHEDULE,
+            filename=filename,
+            season=season,
             primary_col="team",
             rank_col=rank_col,
             sheet_name=sheet_name,

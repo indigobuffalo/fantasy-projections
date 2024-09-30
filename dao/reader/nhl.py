@@ -2,18 +2,23 @@ import pandas as pd
 
 from dao.reader.base import BaseProjectionsReader
 from model.kind import ReaderKind
+from model.season import Season
 
 
 class NHLReader(BaseProjectionsReader):
     """Projections from nhl.com"""
 
-    def __init__(self, filename: str):
+    seasons = [ Season.SEASON_2023_2024 ]
+
+    def __init__(self, filename: str, season: Season):
         super().__init__(
-            ReaderKind.PROJECTION,
-            filename,
+            kind=ReaderKind.PROJECTION,
+            filename=filename,
+            season=season,
             primary_col="Player",
             rank_col='Rank',
-            sheet_name="Sheet 1"
+            position_col='N/A',
+            sheet_name="Sheet 1",
         )
         self.weight = 75
 

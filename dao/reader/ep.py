@@ -1,15 +1,23 @@
 import pandas as pd
 
 from dao.reader.base import BaseProjectionsReader
+from model import season
 from model.kind import ReaderKind
+from model.season import Season
 
 
 class EliteProspectsReader(BaseProjectionsReader):
 
-    def __init__(self, filename: str, rank_col='Rank'):
+    seasons = [
+        Season.SEASON_2023_2024,
+        Season.SEASON_2024_2025
+    ]
+
+    def __init__(self, filename: str, season: Season, rank_col='Rank'):
         super().__init__(
-            ReaderKind.PROJECTION,
-            filename,
+            kind=ReaderKind.PROJECTION,
+            filename=filename,
+            season=season,
             primary_col="Name",
             rank_col=rank_col,
             position_col='Pos',

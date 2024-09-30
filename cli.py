@@ -33,7 +33,8 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--exclude', dest='exclude', type=str, nargs='?', help='The player regexes to excluded from the search.')
     parser.add_argument('-i', '--include', dest='include', type=str, nargs='?', help='The player regexes to search upon.')
     parser.add_argument('-p', '--position', dest='positions', type=str, nargs='?', help='The positions to filter upon.')
-    parser.add_argument('league', type=str, help='The league the projections are for')
+    parser.add_argument('league', type=str, help='The league the projections are for.')
+    parser.add_argument('season', type=str, help='The season the projections are for.')
 
     args = parser.parse_args()
     league = args.league
@@ -46,7 +47,7 @@ if __name__ == '__main__':
 
     averaged_rankings = dict()
 
-    controller = ProjectionsController(league=args.league, count=args.count)
+    controller = ProjectionsController(league=args.league, season=args.season, count=args.count)
 
     # if args.write:
         # write_consolidated_rankings(league, final_rankings)

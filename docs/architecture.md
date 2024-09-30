@@ -21,12 +21,14 @@
 	•	Responsibilities:
 	  •	Perform business logic, such as normalizing and comparing projections.
 	  •	Fetch data via the data access layer, but remain agnostic to the data sources.
+	  •	Normalize, transform and filter the data.
 	•	Components:
 	  •	projection_service.py: Handles projection comparisons and normalization.
 	  •	league_service.py: Manages which analysts to use per league.
 	4.	Data Access Layer
 	•	Responsibilities:
 	  •	Read from Excel files or other sources and map the data to a consistent format.
+	  • Focuses on reading the raw Excel data into pandas DataFrames. It shouldn’t worry about how the columns are named or standardized.
 	•	Components:
 	  •	data_access/excel_reader.py: Extracts data from Excel sheets and ensures consistent data representation.
 

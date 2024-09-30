@@ -1,13 +1,16 @@
 import csv
-from pathlib import Path
 import re
+from pathlib import Path
+from typing import Tuple
 
 from pandas import DataFrame
 
 from config.config import FantasyConfig
 from dao.reader.base import BaseProjectionsReader
+from dao.reader.nhl import NHLReader
 from data.dynamic.drafted import KKUPFL_DRAFTED, PA_DRAFTED
 from model.league import League
+from model.season import Season
 from dao.reader import (
     BlakeRedditReader, 
     DomReader, 
@@ -21,27 +24,22 @@ from dao.reader import (
 OUTPUT_DIR = Path(__file__).parent / "output"
 
 
-BASE_DAOS = [
-    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL),
-    KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP),
-    EliteProspectsReader(FantasyConfig.projection_files.ELITE_PROSPECTS),
-    SteveLaidlawReader(FantasyConfig.projection_files.STEVE_LAIDLAW),
-]
+
+#KKUPFL_READERS = [
+#    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_KKUPFL),
+#    DomReader(FantasyConfig.projection_files.DOM_KKUPFL),
+#    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
+#    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
+#    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
+#    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
+#]
 
 
-KKUPFL_DAOS = [
-    DomReader(FantasyConfig.projection_files.DOM_KKUPFL),
-    DomReader(FantasyConfig.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202324"),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202223"),
-    KKUPFLScoringReader(FantasyConfig.projection_files.KKUPFL_SCORING, "202122"),
-]
-
-
-PUCKIN_AROUND_DAOS = [
-    DomReader(FantasyConfig.projection_files.DOM_PA),
-    DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
-]
+#PUCKIN_AROUND_READERS = [
+#    BlakeRedditReader(FantasyConfig.projection_files.BLAKE_PA),
+#    DomReader(FantasyConfig.projection_files.DOM_PA),
+#    DomReader(FantasyConfig.projection_files.DOM_PA, rank_col='/GP', ascending=False),
+#]
 
 
 def populate_averaged_rankings(rankings: dict):
@@ -82,19 +80,6 @@ def write_avg_ranks_to_csv(league: League, sorted_ranks: list):
 #    return projections_by_reader | historical_stats_by_reader
 
 
-def get_daos(league: League) -> list[BaseProjectionsReader]:
-    '''
-    Creates a list of readers appropriate for the given league.
-    All readers extend BaseReader.
-    '''
-    readers = BASE_DAOS
-    if league == league.KKUPFL:
-        readers.extend(KKUPFL_DAOS)
-    elif league == league.PUCKIN_AROUND:
-        readers.extend(PUCKIN_AROUND_DAOS)
-    return readers
-
-
 #def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
 #                                averaged_rankings: dict):
 #    '''
@@ -111,13 +96,21 @@ def get_daos(league: League) -> list[BaseProjectionsReader]:
 
 
 class ProjectionsSvc:
-    def __init__(self, readers: list[BaseProjectionsReader]):
-        self.readers = readers
+    def __init__(self, league: League, season: Season):
+        self.league = league
+        self.season = season
+        base_readers = [
+            KKUPFLAdpReader(FantasyConfig.projection_files.KKUPFL_ADP, self.season) if self.season in KKUPFLAdpReader.seasons else None,
+            EliteProspectsReader(FantasyConfig.projection_files.ELITE_PROSPECTS, self.season) if self.season in EliteProspectsReader.seasons else None,
+            SteveLaidlawReader(FantasyConfig.projection_files.STEVE_LAIDLAW, self.season) if self.season in SteveLaidlawReader.seasons else None,
+            NHLReader(FantasyConfig.projection_files.NHL, self.season) if self.season in NHLReader.seasons else None,
+        ]
+        self.base_readers = [r for r in base_readers if r is not None]
 
-    @staticmethod
-    def print_results(results: DataFrame):
-        print(f"({len(results)} players)")
-        print(results.to_string(index=False))
+#    @staticmethod
+#    def print_results(results: DataFrame):
+#        print(f"({len(results)} players)")
+#        print(results.to_string(index=False))
 
     @staticmethod
     def get_matches(reader: BaseProjectionsReader, regexes: list[str] = ['.*']) -> DataFrame:
@@ -158,6 +151,23 @@ class ProjectionsSvc:
         for player_name in results[reader.primary_col]:
             reader.add_to_averaged_rankings(player_name, average_rankings)
 
+    
+    def get_readers(self) -> list[BaseProjectionsReader]:
+        '''
+        Gets a list of readers for the service.
+        
+        If the readers param is present, use it to determine which readers to use.
+        If not, default to the readers associated with the given league.
+        '''
+        readers = self.base_readers
+        import ipdb; ipdb.set_trace()
+#        if self.league == League.KKUPFL:
+#            self.base_readers.extend(KKUPFL_READERS)
+#        elif self.league == League.PUCKIN_AROUND:
+#            self.base_readers.extend(PUCKIN_AROUND_READERS)
+        return readers
+
+
     def get_matches_for_readers(self, regexes: list[str]) -> dict[BaseProjectionsReader, DataFrame]:
         '''
         Searches all readers for rows matching the passed in regexes.
@@ -185,3 +195,6 @@ class ProjectionsSvc:
         for reader in self.readers:
             reader_results[reader] = self.get_matches(reader, regexes=['.*'])
         return reader_results
+
+    def get_rankings(regexes: list[str]) -> dict:
+        pass

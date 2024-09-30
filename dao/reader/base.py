@@ -1,7 +1,9 @@
+from abc import ABCMeta, abstractmethod
 from pathlib import Path
 
 import pandas as pd
 from pandas import DataFrame
+from model.season import Season
 from unidecode import unidecode
 
 from exceptions import UnrecognizedPlayerError
@@ -10,15 +12,15 @@ from config.config import FantasyConfig
 
 PROJECTIONS_DIR = Path(__file__).parent.parent.parent / "data" / "projections"
 
-class BaseProjectionsReader:
+class BaseProjectionsReader(metaclass=ABCMeta):
     def __init__(
         self, 
         kind: str, 
-        filename, 
+        filename: str, 
+        season: Season,
         primary_col, 
         rank_col, 
         position_col,
-        season=FantasyConfig.season, 
         team_col=None,
         weight=1, 
         ascending=True, 
@@ -26,18 +28,25 @@ class BaseProjectionsReader:
         header=0
     ):
         self.kind = kind
+        self.season = season
         self.ascending = ascending
         self.rank_col = rank_col
         self.primary_col = primary_col
         self.position_col = position_col
         self.team_col = team_col
         self.weight = weight
-        self.filename = PROJECTIONS_DIR / season / filename
+        self.filename = PROJECTIONS_DIR / self.season.value / filename
         self.df = pd.read_excel(self.filename, sheet_name=sheet_name, index_col=None, header=header)
         self.normalize()
 
     def __str__(self):
         return self.filename.stem
+
+    @property
+    @abstractmethod
+    def seasons(self):
+        '''The seasons supported by the reader'''
+        pass
 
     @staticmethod
     def normalize_spelling(name):
