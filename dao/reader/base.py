@@ -100,18 +100,25 @@ class BaseProjectionsReader(metaclass=ABCMeta):
     def filter_by_rgx():
         pass
 
-    def find_by_rgx(self, filter_regex: str) -> DataFrame:
-        """Get rows with primary column values that satisfy the passed regex filter
+    def get_by_rgx(self, match: str, limit: int = -1) -> DataFrame:
+        """Get rows with primary column values that match incl_rgx and do not match excl_rgx.
 
         Args:
-            filter_regex (str): The regex to filter the primary_column on.
+            match (str): A regex to match against the primary_column.
+            limit (int): Number of records to return.
 
         Returns:
             DataFrame: The matching row(s) from the source dataframe.
         """
-        return self.df.loc[self.df[self.primary_col].str.contains(filter_regex, na=False, case=False)]
+        matches = self.df.loc[
+            self.df[self.primary_col].str.contains(match, na=False, case=False) 
+        ]
+        if limit > 0:
+            return matches.head(limit)
+        return matches
 
-    def find_by_rgxs(self, filter_regexes: list[str]) -> DataFrame:
+
+    def find_by_rgxs(self, filter_regexes: list[str], ) -> DataFrame:
         """Get rows with primary column values that satisfy the passed regex filters
 
         Args:
@@ -122,7 +129,7 @@ class BaseProjectionsReader(metaclass=ABCMeta):
         """
         dataframes = list()
         for r in filter_regexes:
-            dataframes.append(self.find_by_rgx(r))
+            dataframes.append(self.get_by_rgx(r))
         res = pd.concat(dataframes)
         return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
 
@@ -140,7 +147,7 @@ class BaseProjectionsReader(metaclass=ABCMeta):
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
     def add_to_averaged_rankings(self, name: str, rankings: dict):
-        player_df = self.find_by_rgx(name)
+        player_df = self.get_by_rgx(name)
 
         player_rankings = player_df[self.rank_col]
         if len(player_rankings.values) == 0:

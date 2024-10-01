@@ -4,6 +4,7 @@ from pathlib import Path
 from telnetlib import DO
 from typing import Tuple, Union
 
+import pandas as pd
 from pandas import DataFrame
 
 from config.config import FantasyConfig as FC
@@ -89,9 +90,8 @@ class ProjectionsSvc:
             self.maybe_load_reader(NHLReader, FC.projection_files.NHL),
         ]
 
-        # TODO: way to use enum directly as keys instead of using value?
         maybe_readers_by_league = {
-            League.KKUPFL.value: [
+            League.KKUPFL: [
                 self.maybe_load_reader(BlakeRedditReader, FC.projection_files.BLAKE_KKUPFL),
                 self.maybe_load_reader(DomReader, FC.projection_files.DOM_KKUPFL),
                 self.maybe_load_reader(DomReader, FC.projection_files.DOM_KKUPFL, rank_col='/GP', ascending=False),
@@ -99,13 +99,14 @@ class ProjectionsSvc:
                 self.maybe_load_reader(KKUPFLScoringReader, FC.projection_files.KKUPFL_SCORING, sheet_name="202223"),
                 self.maybe_load_reader(KKUPFLScoringReader, FC.projection_files.KKUPFL_SCORING, sheet_name="202122"),
             ],
-            League.PUCKIN_AROUND.value: [
+            League.PUCKIN_AROUND: [
                 self.maybe_load_reader(BlakeRedditReader, FC.projection_files.BLAKE_PA),
                 self.maybe_load_reader(DomReader, FC.projection_files.DOM_PA),
                 self.maybe_load_reader(DomReader, FC.projection_files.DOM_PA, rank_col='/GP', ascending=False),
             ]
         }
-        self.readers = [r for r in maybe_base_readers + maybe_readers_by_league[self.league.value] if r is not None]
+
+        self.readers = [r for r in maybe_base_readers + maybe_readers_by_league[self.league] if r is not None]
 
 
     def maybe_load_reader(self, reader: BaseProjectionsReader, filename: str, **kwargs) -> Union[None, BaseProjectionsReader]:
@@ -175,15 +176,28 @@ class ProjectionsSvc:
             reader.print(results)
 
     def get_top_players_for_readers(self):
-        '''
-        Searches all readers for rows matching the passed in regexes.
+        """Searches all readers for rows matching the passed in regexes.
 
-        Returns a dictionary which maps each reader to its corresponding result set.
-        '''
+        Returns:
+            dict: maps each reader to its corresponding result set
+        """
         reader_results = dict()
         for reader in self.readers:
             reader_results[reader] = self.get_matches(reader, regexes=['.*'])
         return reader_results
 
-    def get_rankings(regexes: list[str]) -> dict:
+    def _filter_rows_by_regex(df: DataFrame) -> DataFrame:
+        import ipdb;ipdb.set_trace()
+        pass
+        
+
+    def get_rankings(self, match_rgxs: list[str], filter_rgxs: list[str], limit: int) -> dict:
+        results: dict[str, DataFrame] = dict()
+        match_regex = "|".join(match_rgxs)
+        filter_rgx = "|".join(filter_rgxs)
+        for reader in self.readers:
+            matches = reader.get_by_rgx(match=match_regex)
+            filtered = matches.loc[~matches[reader.primary_col].str.contains(filter_rgx, na=False, case=False)].head(limit)
+            results[reader] = filtered.round(decimals=1).sort_values(by=[reader.rank_col], ascending=reader.ascending)
+            import ipdb;ipdb.set_trace()
         pass

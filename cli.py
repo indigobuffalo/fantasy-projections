@@ -27,7 +27,7 @@ def print_results(results: str, count: int):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('-w', '--write', action='store_true', help='Write projections.')
-    parser.add_argument('-c', '--count', dest='count', type=int, nargs='?', default=-1, help='Number of rows to return. If omitted, will return all matching rows.')
+    parser.add_argument('-l', '--limit', dest='limit', type=int, nargs='?', default=-1, help='Number of rows to return. If omitted, will return all matching rows.')
     parser.add_argument('-t', '--top', dest='top', action=argparse.BooleanOptionalAction, help='Flag to list top matches available rather than filter by regexes')
     parser.add_argument('--feature', action=argparse.BooleanOptionalAction)
     parser.add_argument('-e', '--exclude', dest='exclude', type=str, nargs='?', help='The player regexes to excluded from the search.')
@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     league = args.league
-    count = args.count
+    limit = args.limit
     # regexes = get_player_rgxs(league, args.regexes, args.top)
     # excluded = get_excluded_for_league(league, args.regexes)
     included = args.include
@@ -47,7 +47,7 @@ if __name__ == '__main__':
 
     averaged_rankings = dict()
 
-    controller = ProjectionsController(league=args.league, season=args.season, count=args.count)
+    controller = ProjectionsController(league=args.league, season=args.season, limit=args.limit)
 
     # if args.write:
         # write_consolidated_rankings(league, final_rankings)

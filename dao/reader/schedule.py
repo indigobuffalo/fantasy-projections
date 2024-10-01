@@ -68,9 +68,9 @@ class JeffMaiScheduleReader(BaseProjectionsReader):
                 # TODO: fix issue with footer column throwing this off
                 df.rename(columns={c: c-1}, inplace=True)
 
-    def find_by_rgx(self, filter_regex: str):
+    def get_by_rgx(self, filter_regex: str):
         cols = [self.rank_col, self.primary_col] + list(self.playoff_weeks)
-        res = super().find_by_rgx(filter_regex)[cols]
+        res = super().get_by_rgx(filter_regex)[cols]
         self.floats_to_ints(res, cols)
         self.jeff_mai_weeks_to_yahoo_weeks(res, cols)
         return res

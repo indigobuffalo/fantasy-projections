@@ -29,8 +29,8 @@ class DomReader(BaseProjectionsReader):
     def __str__(self):
         return f"{self.filename.stem} ({self.rank_col}))"
 
-    def find_by_rgx(self, filter_regex: str):
-        return super().find_by_rgx(filter_regex)[[
+    def get_by_rgx(self, filter_regex: str):
+        return super().get_by_rgx(filter_regex)[[
             self.rank_col,
             self.primary_col,
             self.position_col,

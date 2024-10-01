@@ -21,8 +21,8 @@ class BlakeRedditReader(BaseProjectionsReader):
         )
         self.weight = 75
 
-    def find_by_rgx(self, filter_regex: str):
-        return super().find_by_rgx(filter_regex)[[
+    def get_by_rgx(self, filter_regex: str):
+        return super().get_by_rgx(filter_regex)[[
             self.rank_col,
             self.primary_col,
             'Proj Pos',

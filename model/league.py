@@ -14,4 +14,4 @@ class League(Enum):
             return self.value == other.value
         return NotImplemented
 
-
+    __hash__ = Enum.__hash__ 

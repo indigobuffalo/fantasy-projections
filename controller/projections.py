@@ -2,7 +2,7 @@ from typing import Tuple
 from config.config import FantasyConfig
 from pandas import DataFrame
 from data.dynamic.drafted import KKUPFL_DRAFTED, PA_DRAFTED
-from data.dynamic.filters import PLAYERS_TO_COMPARE
+from data.dynamic.filters import DO_NOT_DRAFT, PLAYERS_TO_COMPARE
 from model.league import League
 from model.season import Season
 from service.projections import ProjectionsSvc
@@ -33,11 +33,11 @@ class ProjectionsController:
         self, 
         league: str, 
         season: str,
-        count: int = -1
+        limit: int = -1
     ):
         self.league = League(league)
         self.season = Season(season)
-        self.count = count
+        self.limit = limit 
         self.service = ProjectionsSvc(self.league, self.season)
     
     def write_consolidated_rankings(league: str, final_rankings: dict):
@@ -53,9 +53,10 @@ class ProjectionsController:
         Returns:
             list[str]: List of players to exclude
         """
-        excluded = list()
         if player_rgxs is not None:
-            excluded.extend(player_rgxs.split(","))
+            return player_rgxs.split(",")
+
+        excluded = list(DO_NOT_DRAFT)
 
         if self.league == League.KKUPFL:
             excluded.extend(KKUPFL_DRAFTED)
@@ -74,9 +75,8 @@ class ProjectionsController:
             return PLAYERS_TO_COMPARE
 
     def get_top_rankings(self, cli_include: str, cli_exclude: str) -> Tuple[str, int]:
+        included = self.get_include_rgxs(cli_include, self.limit > 0)
         excluded = self.get_exclude_rgxs(player_rgxs=cli_exclude)
-        included = self.get_include_rgxs(cli_include, self.count > 0)
-        print(f"Excluded: {excluded}")
-        print(f"Included: {included}")
+        self.service.get_rankings(match_rgxs=included, filter_rgxs=excluded, limit=self.limit)
         import ipdb; ipdb.set_trace()
         pass
