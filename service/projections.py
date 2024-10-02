@@ -1,3 +1,4 @@
+from calendar import day_abbr
 import csv
 import re
 from pathlib import Path
@@ -48,22 +49,6 @@ def write_avg_ranks_to_csv(league: League, sorted_ranks: list):
             writer.writerow([name, avg_rank, count, ranks])
 
 
-#def get_projections_by_regexes(proj_controller: ProjectionsSvc, historical_controller: ProjectionsSvc, regexes: list[str]) -> dict[BaseProjectionsReader, DataFrame]:
-#    matched_players = set()
-#    projections_by_reader = proj_controller.get_matches_for_readers(regexes)
-#    for reader, results in projections_by_reader.items():
-#        projections_by_reader[reader] = proj_controller.refine_results(
-#            reader,
-#            results,
-#            positions_rgx=positions_rgx,
-#            excluded=excluded,
-#            count=count)
-#        matched_players.update(projections_by_reader[reader][reader.primary_col].tolist())
-#
-#    historical_stats_by_reader = historical_controller.get_matches_for_readers(matched_players)
-#    return projections_by_reader | historical_stats_by_reader
-
-
 #def write_consolidated_rankings(controller: ProjectionsSvc, league: str,
 #                                averaged_rankings: dict):
 #    '''
@@ -112,11 +97,6 @@ class ProjectionsSvc:
     def maybe_load_reader(self, reader: BaseProjectionsReader, filename: str, **kwargs) -> Union[None, BaseProjectionsReader]:
         '''Conditionally instantiates passed in BaseProjectionReader if it supports the current season'''
         return reader(filename, self.season, **kwargs) if self.season in reader.seasons else None
-
-#    @staticmethod
-#    def print_results(results: DataFrame):
-#        print(f"({len(results)} players)")
-#        print(results.to_string(index=False))
 
     @staticmethod
     def get_matches(reader: BaseProjectionsReader, regexes: list[str] = ['.*']) -> DataFrame:
@@ -186,18 +166,67 @@ class ProjectionsSvc:
             reader_results[reader] = self.get_matches(reader, regexes=['.*'])
         return reader_results
 
-    def _filter_rows_by_regex(df: DataFrame) -> DataFrame:
-        import ipdb;ipdb.set_trace()
-        pass
-        
+    @staticmethod
+    def _filter_by_primary_regex(reader: BaseProjectionsReader, df: DataFrame, rgx: str = None) -> DataFrame:
+        """Filter out any undesired rows from the DataFrame using the passed regex
 
-    def get_rankings(self, match_rgxs: list[str], filter_rgxs: list[str], limit: int) -> dict:
-        results: dict[str, DataFrame] = dict()
-        match_regex = "|".join(match_rgxs)
-        filter_rgx = "|".join(filter_rgxs)
+        Args:
+            reader (BaseProjectionsReader):  The reader used to generate the matching set of rows in df.
+            df (DataFrame): Dataframe containing matching reader rows.
+            rgx (str): The primary column (e.g. player name) regex to use to filter out rows from df.
+
+        Returns:
+            DataFrame: A filtered set of matching rows.
+        """
+        if rgx is None:
+            return df
+        return df.loc[~df[reader.primary_col].str.contains(rgx, na=False, case=False)]
+
+    @staticmethod
+    def _filter_by_pos(reader: BaseProjectionsReader, df: DataFrame, rgx: str = None) -> DataFrame:
+        """Filter out any undesired rows from the DataFrame using the passed regex
+
+        Args:
+            reader (BaseProjectionsReader):  The reader used to generate the matching set of rows in df.
+            df (DataFrame): Dataframe containing matching reader rows.
+            rgx (str): The positions regex to use to filter out rows from df.  Only rows matching this regex will remain.
+
+        Returns:
+            DataFrame: A set or rows whose position column matches the passed regex.
+        """
+        if rgx is None or reader.position_col is None:
+            return df
+        return df.loc[df[reader.position_col].str.contains(rgx, na=False, case=False)]
+
+    def _filter_results(self, reader: BaseProjectionsReader, matches: DataFrame, primary_filter_rgx: str, pos_rgx: str = None) -> DataFrame:
+        """Whittle down the results returned by DAO.
+
+        Args:
+            reader (BaseProjectionsReader): The reader associated with the result set
+            matches (DataFrame): DataFrame holding the currently matched rows.
+            primary_filter_rgx (str): Regex used to filter against the primary column.
+            pos_rgx (str, optional): Regex used to filter against the position column.  Defaults to None.
+
+        Returns:
+            DataFrame: A whittled down dataframe that has had the desired filters applied to it.
+        """
+        filtered_by_primary = self._filter_by_primary_regex(reader, matches, primary_filter_rgx)
+        filtered_by_pos = self._filter_by_pos(reader, filtered_by_primary, pos_rgx)
+        return filtered_by_pos
+
+    def get_rankings(
+        self,
+        primary_rgxs: list[str],
+        primary_filter_rgxs: list[str] = None,
+        pos_rgxs: list[str] = None,
+        limit: int = -1
+    ) -> dict:
+        results: dict[BaseProjectionsReader, DataFrame] = dict()
+        primary_query_rgx = "|".join(primary_rgxs)
+        position_query_rgx = "|".join(pos_rgxs) if pos_rgxs is not None else None
+        primary_filter_rgx = "|".join(primary_filter_rgxs) if primary_filter_rgxs is not None else None
         for reader in self.readers:
-            matches = reader.get_by_rgx(match=match_regex)
-            filtered = matches.loc[~matches[reader.primary_col].str.contains(filter_rgx, na=False, case=False)].head(limit)
-            results[reader] = filtered.round(decimals=1).sort_values(by=[reader.rank_col], ascending=reader.ascending)
-            import ipdb;ipdb.set_trace()
-        pass
+            matches = reader.query_primary_col(query=primary_query_rgx)
+            filtered = self._filter_results(reader, matches, primary_filter_rgx, position_query_rgx)
+            results[str(reader)] = filtered.round(decimals=1).sort_values(by=[reader.rank_col], ascending=reader.ascending).head(limit)
+        return results

@@ -1,3 +1,4 @@
+import stat
 from typing import Tuple
 from config.config import FantasyConfig
 from pandas import DataFrame
@@ -44,7 +45,7 @@ class ProjectionsController:
         controller = ProjectionsSvc(get_daos(league))
         write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     
-    def get_exclude_rgxs(self, player_rgxs: str = None) -> list[str]:
+    def _get_exclude_rgxs(self, player_rgxs: str = None) -> list[str]:
         """Get list of comma-delimited player regexes to exclude from results
     
         Args:
@@ -53,10 +54,10 @@ class ProjectionsController:
         Returns:
             list[str]: List of players to exclude
         """
-        if player_rgxs is not None:
-            return player_rgxs.split(",")
-
         excluded = list(DO_NOT_DRAFT)
+
+        if player_rgxs is not None:
+            excluded.extend(player_rgxs.split(","))
 
         if self.league == League.KKUPFL:
             excluded.extend(KKUPFL_DRAFTED)
@@ -65,18 +66,52 @@ class ProjectionsController:
 
         return excluded
     
-    @staticmethod
-    def get_include_rgxs(rgxs: str = None, top: bool = False) -> list[str]:
+    def _get_include_rgxs(self, rgxs: str = None) -> list[str]:
         if rgxs is not None:
             return rgxs.split(",")
-        elif top:
+        elif self.limit > 0:  # limit implies we just care about the top N rankings per analyst
             return ['.*']
         else:
             return PLAYERS_TO_COMPARE
 
-    def get_top_rankings(self, cli_include: str, cli_exclude: str) -> Tuple[str, int]:
-        included = self.get_include_rgxs(cli_include, self.limit > 0)
-        excluded = self.get_exclude_rgxs(player_rgxs=cli_exclude)
-        self.service.get_rankings(match_rgxs=included, filter_rgxs=excluded, limit=self.limit)
-        import ipdb; ipdb.set_trace()
-        pass
+    @staticmethod
+    def _get_position_rgxs(positions: str) -> list[str]:
+        # TODO: consider making this a default in argparse
+        if positions is None:
+            return [".*"]
+
+        positions = [p.upper() for p in positions.split(",")]
+        pos_map = {
+            "F": "C|LW|RW",
+            "FWD": "C|LW|RW",
+            "SKT": "C|LW|RW|D",
+        }
+        return [pos_map.get(p, p) for p in positions]
+
+    @staticmethod
+    def _get_title(results_metadata: str):
+        title_parts = results_metadata.split("__")
+        title_parts[-1] = f"({title_parts[-1]})"
+        return " ".join(title_parts)
+
+    def print_header(self, results_metadata: str):
+        title = self._get_title(results_metadata)
+        chars = len(title)
+        border = '=' * chars
+        print(f"{border}\n{title}\n{border}")
+
+    def print(self, results_metadata:str, results: DataFrame) -> None:
+        '''
+        Print results for the current reader
+        '''
+        self.print_header(results_metadata)
+        print(f"({len(results)} players)")
+        print(results.to_string(index=False))
+
+    def print_rankings(self, cli_include: str, cli_exclude: str, positions: str = None) -> Tuple[str, int]:
+        included_primary = self._get_include_rgxs(cli_include)
+        excluded_primary = None if cli_include is not None else self._get_exclude_rgxs(cli_exclude)
+        included_pos = self._get_position_rgxs(positions)
+        results = self.service.get_rankings(primary_rgxs=included_primary, primary_filter_rgxs=excluded_primary, pos_rgxs=included_pos, limit=self.limit)
+        for result_metadata, result in results.items():
+            self.print(result_metadata, result)

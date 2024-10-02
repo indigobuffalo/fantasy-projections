@@ -26,11 +26,8 @@ class DomReader(BaseProjectionsReader):
         )
         self.weight = 700 if self.rank_col == 'RK' else 0  # don't weigh /GP rank
 
-    def __str__(self):
-        return f"{self.filename.stem} ({self.rank_col}))"
-
-    def get_by_rgx(self, filter_regex: str):
-        return super().get_by_rgx(filter_regex)[[
+    def query_primary_col(self, query: str, limit: int = -1):
+        return super().query_primary_col(query, limit)[[
             self.rank_col,
             self.primary_col,
             self.position_col,

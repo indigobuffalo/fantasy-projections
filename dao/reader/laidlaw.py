@@ -19,13 +19,13 @@ class SteveLaidlawReader(BaseProjectionsReader):
             season=season,
             primary_col="Name", 
             rank_col=rank_col, 
-            position_col='N/A', 
+            position_col=None,
             sheet_name="Skaters Rankings"
         )
         self.weight = 75
 
-    def get_by_rgx(self, filter_regex: str):
-        return super().get_by_rgx(filter_regex)[[
+    def query_primary_col(self, query: str, limit: int = -1):
+        return super().query_primary_col(query, limit)[[
             self.rank_col,
             self.primary_col,
             'GP',

@@ -22,8 +22,8 @@ class NHLReader(BaseProjectionsReader):
         )
         self.weight = 75
 
-    def get_by_rgx(self, filter_regex: str):
-        return super().get_by_rgx(filter_regex)[[
+    def query_primary_col(self, match: str, limit: int = -1):
+        return super().query_primary_col(match, limit)[[
             self.rank_col,
             self.primary_col,
             'Team',

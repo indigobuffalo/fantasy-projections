@@ -33,10 +33,10 @@ class KKUPFLScoringReader(BaseProjectionsReader):
         self.weight = 0
 
     def __str__(self):
-        return f"{self.filename.stem} ({self.sheet_name})"
+        return f"{self.season}__{self.filename.stem}__{self.rank_col}  - {self.sheet_name}"
 
-    def get_by_rgx(self, filter_regex: str):
-        return super().get_by_rgx(filter_regex)[[
+    def query_primary_col(self, query: str, limit: int = -1):
+        return super().query_primary_col(query, limit)[[
             self.rank_col,
             self.primary_col,
             self.position_col,

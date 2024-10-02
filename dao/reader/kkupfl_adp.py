@@ -23,8 +23,8 @@ class KKUPFLAdpReader(BaseProjectionsReader):
         )
         self.weight = 75
 
-    def get_by_rgx(self, match: str, limit: int = -1):
-        return super().get_by_rgx(match, limit)[[
+    def query_primary_col(self, query: str, limit: int = -1):
+        return super().query_primary_col(query, limit)[[
             self.rank_col,
             self.primary_col,
             self.position_col,

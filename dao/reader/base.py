@@ -40,7 +40,7 @@ class BaseProjectionsReader(metaclass=ABCMeta):
         self.normalize()
 
     def __str__(self):
-        return self.filename.stem
+        return f"{self.season}__{self.filename.stem}__{self.rank_col.strip().replace(" ","-")}"
 
     @property
     @abstractmethod
@@ -84,34 +84,21 @@ class BaseProjectionsReader(metaclass=ABCMeta):
         else:
             self.df[self.primary_col] = self.df[self.primary_col].apply(self.normalize_player_names)
 
-    def print_header(self):
-        chars = len(str(self))
-        border = '=' * chars
-        print(f"{border}\n{self}\n{border}")
-
-    def print(self, results: DataFrame):
-        '''
-        Print results for the current reader
-        '''
-        self.print_header()
-        print(f"({len(results)} players)")
-        print(results.to_string(index=False))
-
     def filter_by_rgx():
         pass
 
-    def get_by_rgx(self, match: str, limit: int = -1) -> DataFrame:
+    def query_primary_col(self, query: str, limit: int = -1) -> DataFrame:
         """Get rows with primary column values that match incl_rgx and do not match excl_rgx.
 
         Args:
-            match (str): A regex to match against the primary_column.
+            query (str): A regex to query the primary_column with.
             limit (int): Number of records to return.
 
         Returns:
             DataFrame: The matching row(s) from the source dataframe.
         """
         matches = self.df.loc[
-            self.df[self.primary_col].str.contains(match, na=False, case=False) 
+            self.df[self.primary_col].str.contains(query, na=False, case=False)
         ]
         if limit > 0:
             return matches.head(limit)
@@ -129,7 +116,7 @@ class BaseProjectionsReader(metaclass=ABCMeta):
         """
         dataframes = list()
         for r in filter_regexes:
-            dataframes.append(self.get_by_rgx(r))
+            dataframes.append(self.query_primary_col(r))
         res = pd.concat(dataframes)
         return res.round(decimals=1).sort_values(by=[self.rank_col], ascending=self.ascending)
 
@@ -147,7 +134,7 @@ class BaseProjectionsReader(metaclass=ABCMeta):
             rankings[name] = {'ranks': [Rank(name=name, rank=rank, source=str(self), weight=self.weight)]}
 
     def add_to_averaged_rankings(self, name: str, rankings: dict):
-        player_df = self.get_by_rgx(name)
+        player_df = self.query_primary_col(name)
 
         player_rankings = player_df[self.rank_col]
         if len(player_rankings.values) == 0:
