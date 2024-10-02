@@ -76,10 +76,6 @@ class ProjectionsController:
 
     @staticmethod
     def _get_position_rgxs(positions: str) -> list[str]:
-        # TODO: consider making this a default in argparse
-        if positions is None:
-            return [".*"]
-
         positions = [p.upper() for p in positions.split(",")]
         pos_map = {
             "F": "C|LW|RW",
@@ -108,10 +104,10 @@ class ProjectionsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def print_rankings(self, cli_include: str, cli_exclude: str, positions: str = None) -> Tuple[str, int]:
-        included_primary = self._get_include_rgxs(cli_include)
-        excluded_primary = None if cli_include is not None else self._get_exclude_rgxs(cli_exclude)
-        included_pos = self._get_position_rgxs(positions)
-        results = self.service.get_rankings(primary_rgxs=included_primary, primary_filter_rgxs=excluded_primary, pos_rgxs=included_pos, limit=self.limit)
+    def print_rankings(self, primary_query: str, primary_filter: str, position_query: str = None) -> Tuple[str, int]:
+        primary_query_rgxs = self._get_include_rgxs(primary_query)
+        position_query_rgxs = self._get_position_rgxs(position_query)
+        primary_filter_rgxs = None if primary_query is not None else self._get_exclude_rgxs(primary_filter)
+        results = self.service.get_rankings(primary_query_rgxs=primary_query_rgxs, primary_filter_rgxs=primary_filter_rgxs, position_query_rgxs=position_query_rgxs, limit=self.limit)
         for result_metadata, result in results.items():
             self.print(result_metadata, result)

@@ -16,7 +16,7 @@ if __name__ == '__main__':
     parser.add_argument('--feature', action=argparse.BooleanOptionalAction)
     parser.add_argument('-e', '--exclude', dest='exclude', type=str, nargs='?', help='The player regexes to excluded from the search.')
     parser.add_argument('-i', '--include', dest='include', type=str, nargs='?', help='The player regexes to search upon.')
-    parser.add_argument('-p', '--position', dest='position', type=str, nargs='?', help='The positions to filter upon.')
+    parser.add_argument('-p', '--position', dest='position', type=str, nargs='?', default=".*", help='The positions to filter upon.')
     parser.add_argument('league', type=str, help='The league the projections are for.')
     parser.add_argument('season', type=str, help='The season the projections are for.')
 
@@ -38,7 +38,7 @@ if __name__ == '__main__':
         # controller = ProjectionsSvc(get_readers(league))
         # write_consolidated_rankings(controller, league, averaged_rankings=averaged_rankings)
     else:
-        controller.print_rankings(cli_include=included, cli_exclude=excluded, positions=positions)
+        controller.print_rankings(primary_query=included, primary_filter=excluded, position_query=positions)
         # projections_controller.print_matches_for_all_readers(projections)
         # historical_controller.print_matches_for_all_readers(historical_stats_by_reader)
         # print("==================")

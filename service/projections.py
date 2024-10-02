@@ -216,14 +216,14 @@ class ProjectionsSvc:
 
     def get_rankings(
         self,
-        primary_rgxs: list[str],
+        primary_query_rgxs: list[str],
         primary_filter_rgxs: list[str] = None,
-        pos_rgxs: list[str] = None,
+        position_query_rgxs: list[str] = None,
         limit: int = -1
     ) -> dict:
         results: dict[BaseProjectionsReader, DataFrame] = dict()
-        primary_query_rgx = "|".join(primary_rgxs)
-        position_query_rgx = "|".join(pos_rgxs) if pos_rgxs is not None else None
+        primary_query_rgx = "|".join(primary_query_rgxs)
+        position_query_rgx = "|".join(position_query_rgxs) if position_query_rgxs is not None else None
         primary_filter_rgx = "|".join(primary_filter_rgxs) if primary_filter_rgxs is not None else None
         for reader in self.readers:
             matches = reader.query_primary_col(query=primary_query_rgx)
