@@ -204,8 +204,8 @@ class ProjectionsSvc:
         Args:
             reader (BaseProjectionsReader): The reader associated with the result set
             matches (DataFrame): DataFrame holding the currently matched rows.
-            primary_filter_rgx (str): Regex used to filter against the primary column.
-            pos_rgx (str, optional): Regex used to filter against the position column.  Defaults to None.
+            primary_filter_rgx (str): Regex used to match against the primary column.
+            pos_rgx (str, optional): Regex used to match against the position column.  Defaults to None.
 
         Returns:
             DataFrame: A whittled down dataframe that has had the desired filters applied to it.
@@ -214,19 +214,62 @@ class ProjectionsSvc:
         filtered_by_pos = self._filter_by_pos(reader, filtered_by_primary, pos_rgx)
         return filtered_by_pos
 
+    def get_rankings_per_reader(self, primary_query: str, position_query: str, primary_filter: str, limit: int = -1) -> dict[str, DataFrame]:
+        """Loop through this Service's readers and formulate a list of all matching rows by reader.
+
+        Args:
+            primary_query(list[str]): Regexes used to match against the primary field (e.g. player or team name).
+            primary_filter(list[str], optional): Regexes used to filter out matches. Defaults to None.
+            position_query(list[str], optional): Regexes used to match against the position column. Defaults to None.
+            limit (int, optional): The number of matching rows to include. Defaults to -1.
+
+        Returns:
+            dict[str, DataFrame]: A map of readers to matching rows.
+        """
+        results: dict[str, DataFrame] = dict()
+        for reader in self.readers:
+            matches = reader.query_primary_col(query=primary_query)
+            filtered = self._filter_results(reader, matches, primary_filter, position_query)
+            results[str(reader)] = filtered.round(decimals=1).sort_values(by=[reader.rank_col], ascending=reader.ascending).head(limit)
+        return results
+
+    @staticmethod
+    def get_average_rankings(rankings: dict[str, DataFrame]) -> dict[str, DataFrame]:
+        """Generates a weighted average list of rankings using all of the ranking sets in the passed dict.
+
+        Args:
+            rankings (dict[str, DataFrame]): A map of readers to rankings.
+
+        Returns:
+            dict[str, DataFrame]: _description_
+        """
+        pass
+
     def get_rankings(
         self,
         primary_query_rgxs: list[str],
         primary_filter_rgxs: list[str] = None,
         position_query_rgxs: list[str] = None,
+        include_avg: bool = True,
         limit: int = -1
-    ) -> dict:
-        results: dict[BaseProjectionsReader, DataFrame] = dict()
+    ) -> dict[str, DataFrame]:
+        """Gets a list of results for each reader that matches the passed
+        queries and exludes results matching the passed filters.
+
+        Args:
+            primary_query_rgxs (list[str]): Regexes used to match against the primary field (e.g. player or team name).
+            primary_filter_rgxs (list[str], optional): Regexes used to filter out matches. Defaults to None.
+            position_query_rgxs (list[str], optional): Regexes used to match against the position column. Defaults to None.
+            limit (int, optional): The number of matching rows to include. Defaults to -1.
+
+        Returns:
+            dict[str, DataFrame]: a map of readers to matching rows.  Optionally will also include a weighted average of the rankings.
+        """
+        results: dict[str, DataFrame] = dict()
         primary_query_rgx = "|".join(primary_query_rgxs)
         position_query_rgx = "|".join(position_query_rgxs) if position_query_rgxs is not None else None
         primary_filter_rgx = "|".join(primary_filter_rgxs) if primary_filter_rgxs is not None else None
-        for reader in self.readers:
-            matches = reader.query_primary_col(query=primary_query_rgx)
-            filtered = self._filter_results(reader, matches, primary_filter_rgx, position_query_rgx)
-            results[str(reader)] = filtered.round(decimals=1).sort_values(by=[reader.rank_col], ascending=reader.ascending).head(limit)
+        results.update(self.get_rankings_per_reader(primary_query_rgx, position_query_rgx, primary_filter_rgx, limit))
+        if include_avg:
+            results.update(self.get_average_rankings(results))
         return results

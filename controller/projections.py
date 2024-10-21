@@ -104,10 +104,10 @@ class ProjectionsController:
         print(f"({len(results)} players)")
         print(results.to_string(index=False))
 
-    def print_rankings(self, primary_query: str, primary_filter: str, position_query: str = None) -> Tuple[str, int]:
+    def print_rankings(self, primary_query: str, primary_filter: str, position_query: str = None, include_avg: bool = True) -> Tuple[str, int]:
         primary_query_rgxs = self._get_include_rgxs(primary_query)
         position_query_rgxs = self._get_position_rgxs(position_query)
         primary_filter_rgxs = None if primary_query is not None else self._get_exclude_rgxs(primary_filter)
-        results = self.service.get_rankings(primary_query_rgxs=primary_query_rgxs, primary_filter_rgxs=primary_filter_rgxs, position_query_rgxs=position_query_rgxs, limit=self.limit)
+        results = self.service.get_rankings(primary_query_rgxs=primary_query_rgxs, primary_filter_rgxs=primary_filter_rgxs, position_query_rgxs=position_query_rgxs, limit=self.limit, include_avg=include_avg)
         for result_metadata, result in results.items():
             self.print(result_metadata, result)
